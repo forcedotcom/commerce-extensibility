@@ -1,21 +1,19 @@
 public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_Cart_ShippingCalculator_1 {
 
     public virtual override void calculate(sfdc_cart_summ.CartCalculationRequest request) {
-        //Clean up CVO based on Shipping
 
         sfdc_cart_summ.Cart cart = request.getCart();
-        System.debug('In Shipping Calculator');
 
         //Clean up CVO based on Shipping
         sfdc_cart_summ.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
-        
+
         for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--){
                 sfdc_cart_summ.CartValidationOutput cvo =  cartValidationOutputCollection.get(i);
                 if(cvo.getType() == sfdc_cart_summ.CartValidationOutputTypeEnum.SHIPPING){
                     cartValidationOutputCollection.remove(cvo);
            }
-        } 
-        
+        }
+
 
         // We need to get the ID of the cart delivery group in order to create the Cart delivery group Methods.
         sfdc_cart_summ.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
@@ -27,33 +25,29 @@ public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_C
         }
 
         else {
-        
+
             sfdc_cart_summ.CartItemCollection cartItems = cart.getCartItems();
             Integer numberOfUniqueItems = cartItems.size();
-            
-            
+
+
             sfdc_cart_summ.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
             sfdc_cart_summ.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
             
-            System.debug('Before delete'+ cartDeliveryGroupMethods.size());
-            
             for (Integer i = (cartDeliveryGroupMethods.size()-1) ; i>= 0 ; i--){
             sfdc_cart_summ.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
             cartDeliveryGroupMethods.remove(method);
-            } 
-            
-            System.debug('After delete'+ cartDeliveryGroupMethods.size());
-            
+            }
+
             // Get shipping options, including aspects like rates and carriers, from the external service.
             ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(numberOfUniqueItems);
-            
+
             // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method which matches
             populateCartDeliveryGroupMethodWithShippingOptions(shippingOptionsAndRatesFromExternalService, cartDeliveryGroupMethods, cartValidationOutputCollection);
-      
+
         }
     }
-    
+
     private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService (Integer numberOfUniqueItems) {
         final Integer SuccessfulHttpRequest = 200;
 
@@ -127,18 +121,18 @@ public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_C
             return name;
         }
     }
-    
+
     private void populateCartDeliveryGroupMethodWithShippingOptions(List<ShippingOptionsAndRatesFromExternalService> shippingOptions,
             sfdc_cart_summ.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection, sfdc_cart_summ.CartValidationOutputCollection cartValidationOutputCollection) {
         List<OrderDeliveryMethod> odms = [SELECT Id, ProductId, Carrier, ClassOfService, IsActive FROM OrderDeliveryMethod];
-        
+
         if(odms.size()==0){
             sfdc_cart_summ.CartValidationOutput cvo = new sfdc_cart_summ.CartValidationOutput(sfdc_cart_summ.CartValidationOutputTypeEnum.SHIPPING,
                     sfdc_cart_summ.CartValidationOutputLevelEnum.INFO );
             cvo.setMessage('No Order Delivery Methods have been defined');
             cartValidationOutputCollection.add(cvo);
         }
-       
+
         else{
             for(OrderDeliveryMethod odm :odms){
                 for (ShippingOptionsAndRatesFromExternalService shippingOption: shippingOptions) {
