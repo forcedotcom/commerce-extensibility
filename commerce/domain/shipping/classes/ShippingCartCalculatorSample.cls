@@ -1,41 +1,45 @@
-public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_Cart_ShippingCalculator_1 {
+//This sample is for the situations where Shipping Calculation needs to be extended or overriden via the extension point for the Shipping Calculator.
+//The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
 
-    public virtual override void calculate(sfdc_cart_summ.CartCalculationRequest request) {
+//This must extend the CartExtension.Commerce_Domain_Cart_ShippingCalculator_1 class in order to be processed.
+public class ShippingCartCalculatorSample extends CartExtension.Commerce_Domain_Cart_ShippingCalculator_1 {
 
-        sfdc_cart_summ.Cart cart = request.getCart();
+    public virtual override void calculate(CartExtension.CartCalculationRequest request) {
+
+        CartExtension.Cart cart = request.getCart();
 
         //Clean up CVO based on Shipping
-        sfdc_cart_summ.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
+        CartExtension.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
 
         for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--){
-                sfdc_cart_summ.CartValidationOutput cvo =  cartValidationOutputCollection.get(i);
-                if(cvo.getType() == sfdc_cart_summ.CartValidationOutputTypeEnum.SHIPPING){
+                CartExtension.CartValidationOutput cvo =  cartValidationOutputCollection.get(i);
+                if(cvo.getType() == sCartExtension.CartValidationOutputTypeEnum.SHIPPING){
                     cartValidationOutputCollection.remove(cvo);
            }
         }
 
 
         // We need to get the ID of the cart delivery group in order to create the Cart delivery group Methods.
-        sfdc_cart_summ.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
+        CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
         if(cartDeliveryGroups.size() == 0){
-            sfdc_cart_summ.CartValidationOutput cvo = new sfdc_cart_summ.CartValidationOutput(sfdc_cart_summ.CartValidationOutputTypeEnum.SHIPPING,
-                    sfdc_cart_summ.CartValidationOutputLevelEnum.INFO );
+            CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+                    CartExtension.CartValidationOutputLevelEnum.INFO );
             cvo.setMessage('No Cart Delivery Groups have been defined');
             cartValidationOutputCollection.add(cvo);
         }
 
         else {
 
-            sfdc_cart_summ.CartItemCollection cartItems = cart.getCartItems();
+            CartExtension.CartItemCollection cartItems = cart.getCartItems();
             Integer numberOfUniqueItems = cartItems.size();
 
 
-            sfdc_cart_summ.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
+            CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
-            sfdc_cart_summ.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
-            
+            CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
+
             for (Integer i = (cartDeliveryGroupMethods.size()-1) ; i>= 0 ; i--){
-            sfdc_cart_summ.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
+            CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
             cartDeliveryGroupMethods.remove(method);
             }
 
@@ -123,12 +127,12 @@ public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_C
     }
 
     private void populateCartDeliveryGroupMethodWithShippingOptions(List<ShippingOptionsAndRatesFromExternalService> shippingOptions,
-            sfdc_cart_summ.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection, sfdc_cart_summ.CartValidationOutputCollection cartValidationOutputCollection) {
+            CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection, CartExtension.CartValidationOutputCollection cartValidationOutputCollection) {
         List<OrderDeliveryMethod> odms = [SELECT Id, ProductId, Carrier, ClassOfService, IsActive FROM OrderDeliveryMethod];
 
         if(odms.size()==0){
-            sfdc_cart_summ.CartValidationOutput cvo = new sfdc_cart_summ.CartValidationOutput(sfdc_cart_summ.CartValidationOutputTypeEnum.SHIPPING,
-                    sfdc_cart_summ.CartValidationOutputLevelEnum.INFO );
+            CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+                    CartExtension.CartValidationOutputLevelEnum.INFO );
             cvo.setMessage('No Order Delivery Methods have been defined');
             cartValidationOutputCollection.add(cvo);
         }
@@ -141,7 +145,7 @@ public class CustomerShippingCalculator extends sfdc_cart_summ.Commerce_Domain_C
                     String odmId = Id.valueOf((String)odm.id);
                     if(odm.carrier == carrier && odm.classOfService == classOfService){
                         // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
-                        sfdc_cart_summ.CartDeliveryGroupMethod cartDeliveryGroupMethod = new sfdc_cart_summ.CartDeliveryGroupMethod(shippingOption.getName(),odmId, shippingOption.getRate());
+                        CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(shippingOption.getName(),odmId, shippingOption.getRate());
                         cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
                         cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
                     }
