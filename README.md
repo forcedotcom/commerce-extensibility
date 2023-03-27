@@ -1,5 +1,5 @@
 # commerce-extensibility
-Reference Implementations
+
 Reference Implementation samples for the Calculators. Include Apex classes, tests and resource files for all Calculators.
 
 Use Metadata API to deploy this using Workbench:
