@@ -1,8 +1,8 @@
 //This sample is for the situations where Shipping Calculation needs to be extended or overriden via the extension point for the Shipping Calculator.
 //The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
 
-//This must extend the CartExtension.Commerce_Domain_Cart_ShippingCalculator_1 class in order to be processed.
-public class ShippingCartCalculatorSample extends CartExtension.Commerce_Domain_Cart_ShippingCalculator_1 {
+//This must extend the CartExtension.ShippingCartCalculator class in order to be processed.
+public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
 
     public virtual override void calculate(CartExtension.CartCalculationRequest request) {
 
@@ -38,6 +38,7 @@ public class ShippingCartCalculatorSample extends CartExtension.Commerce_Domain_
 
             CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
+            //clean up the CartDeliveryGroupMethods
             for (Integer i = (cartDeliveryGroupMethods.size()-1) ; i>= 0 ; i--){
             CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
             cartDeliveryGroupMethods.remove(method);
