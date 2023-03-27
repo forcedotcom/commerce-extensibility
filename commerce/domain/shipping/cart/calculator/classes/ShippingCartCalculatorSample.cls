@@ -23,7 +23,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
         if(cartDeliveryGroups.size() == 0){
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-                    CartExtension.CartValidationOutputLevelEnum.INFO );
+                    CartExtension.CartValidationOutputLevelEnum.ERROR );
             cvo.setMessage('No Cart Delivery Groups have been defined');
             cartValidationOutputCollection.add(cvo);
         }
@@ -133,7 +133,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
         if(odms.size()==0){
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-                    CartExtension.CartValidationOutputLevelEnum.INFO );
+                    CartExtension.CartValidationOutputLevelEnum.ERROR );
             cvo.setMessage('No Order Delivery Methods have been defined');
             cartValidationOutputCollection.add(cvo);
         }
