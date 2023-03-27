@@ -140,8 +140,8 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         }
 
         else{
-            for(OrderDeliveryMethod odm :odms){
-                for (ShippingOptionsAndRatesFromExternalService shippingOption: shippingOptions) {
+              for (ShippingOptionsAndRatesFromExternalService shippingOption: shippingOptions) {
+                 for(OrderDeliveryMethod odm :odms){
                     String carrier = shippingOption.serviceName;
                     String classOfService = shippingOption.provider;
                     String odmId = Id.valueOf((String)odm.id);
