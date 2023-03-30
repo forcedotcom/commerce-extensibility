@@ -10,7 +10,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 
 ## Shipping Calculator
 
-The sample code for Shipping Calculator includes an Apex class (in `CustomerShippingCalculator.apxc`) that calls an external service to retrieve shipping rates and then save that rate as an additional charge in the `CartItems`.
+The sample code for Shipping Calculator includes an Apex class (in `ShippingCalculatorSample.apxc`) that calls an external service to retrieve shipping rates and then save that rate as an additional charge in the `CartItems`.
 
 **Warning**: This sample code uses a live Heroku service to showcase how to use a third-party integration to retrieve shipping options. The function `getShippingOptionsAndRatesFromExternalService` responds with hardcoded shipping options. If you need to bypass the live call, use `getShippingOptionsAndRatesFromMockedService` instead.
 
