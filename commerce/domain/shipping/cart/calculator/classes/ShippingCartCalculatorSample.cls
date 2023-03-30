@@ -38,7 +38,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
             CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
-            //clean up the CartDeliveryGroupMethods
+            // Clean up the CartDeliveryGroupMethods
             for (Integer i = (cartDeliveryGroupMethods.size()-1) ; i>= 0 ; i--){
             CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
             cartDeliveryGroupMethods.remove(method);
