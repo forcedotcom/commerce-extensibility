@@ -47,7 +47,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             // Get shipping options, including aspects like rates and carriers, from the external service.
             ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(numberOfUniqueItems);
 
-            // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method which matches
+            // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method that matches
             populateCartDeliveryGroupMethodWithShippingOptions(shippingOptionsAndRatesFromExternalService, cartDeliveryGroupMethods, cartValidationOutputCollection);
 
         }
