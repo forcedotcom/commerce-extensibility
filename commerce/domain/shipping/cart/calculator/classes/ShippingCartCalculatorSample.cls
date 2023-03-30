@@ -1,5 +1,5 @@
 // This sample is for the situations where Shipping Calculation needs to be extended or overridden via the extension point for the Shipping Calculator.
-//The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
+// The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
 
 //This must extend the CartExtension.ShippingCartCalculator class in order to be processed.
 public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
