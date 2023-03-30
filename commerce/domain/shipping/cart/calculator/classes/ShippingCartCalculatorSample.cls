@@ -8,7 +8,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
         CartExtension.Cart cart = request.getCart();
 
-        //Clean up CVO based on Shipping
+        // Clean up CVO based on Shipping
         CartExtension.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
 
         for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--){
