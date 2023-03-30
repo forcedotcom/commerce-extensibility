@@ -19,7 +19,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         }
 
 
-        // We need to get the ID of the cart delivery group in order to create the Cart delivery group Methods.
+        // To create the Cart delivery group methods, we need to get the ID of the cart delivery group.
         CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
         if(cartDeliveryGroups.size() == 0){
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
