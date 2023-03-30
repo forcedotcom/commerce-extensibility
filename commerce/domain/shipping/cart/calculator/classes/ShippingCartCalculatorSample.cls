@@ -61,7 +61,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
         Http http = new Http();
         HttpRequest request = new HttpRequest();
-        // To access the service below, you may need to add endpoint = https://b2b-commerce-test.herokuapp.com in Setup | Security | Remote site settings.
+        // To access the service below, add https://b2b-commerce-test.herokuapp.com as an endpoint in Setup > Security > Remote site settings.
         request.setEndpoint('https://b2b-commerce-test.herokuapp.com/calculate-shipping-rates-winter-21');
         request.setMethod('GET');
         HttpResponse response = http.send(request);
