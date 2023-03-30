@@ -53,7 +53,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         }
     }
 
-    //Note: This method in the sample currently only takes in numberOfUniqueItems as an input, but the parameter list may be expanded in real-world scenarios
+    // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For real-world scenarios, expand the parameter list.
     private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService (Integer numberOfUniqueItems) {
         final Integer SuccessfulHttpRequest = 200;
 
