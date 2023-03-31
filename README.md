@@ -34,22 +34,6 @@ To propagate an error to the admin, throw an exception from the reference implem
 
 To learn how to create a Platform Status Alert Event trigger for the notification, see [PlatformStatusAlertEvent](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/sforce_api_objects_platformstatusalertevent.htm) and [Flow Core Action: Send Custom Notification](https://help.salesforce.com/s/articleView?id=sf.flow_ref_elements_actions_sendcustomnotification.htm&type=5).
 
-## Pricing Service
-
-The sample code for Pricing Service includes an Apex class (in `PricingServiceSample.apxc`) that calls an external service to retrieve product prices and then saves that price in the `PricingResponseItems`.
-
-**Warning**: This sample code uses a live Heroku service to showcase how to use a third-party integration to retrieve product prices in the function `getPricesFromExternalService`. If you need to bypass the live call, please use mocked data instead.
-
-A test class is also included for reference.
-
-## Pricing Service
-
-The sample code for Pricing Service includes an Apex class (in `PricingServiceSample.apxc`) that calls an external service to retrieve product prices and then saves that price in the `PricingResponseItems`.
-
-**Warning**: This sample code uses a live Heroku service to showcase how to use a third-party integration to retrieve product prices in the function `getPricesFromExternalService`. If you need to bypass the live call, please use mocked data instead.
-
-A test class is also included for reference.
-
 ## Deployment
 
 To deploy this reference implementation, use Workbench:
