@@ -6,7 +6,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 - Shipping Calculator
 - Tax Calculator
 
-Each set of sample code includes: an Apex class, a test classes, and any necessary resource files.
+Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
 A live Heroku service is used to simulate a connection to a third-party system. You can bypass the Heroku service and use mocked data instead.
 
