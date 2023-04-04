@@ -1,28 +1,28 @@
 # Commerce Extensibility
 
-This repository contains a reference implementation of the Commerce Extensibility Framework. It includes sample code for extending the Shipping Calculator Service and the Pricing Service. Each set of sample code includes:
+This repository contains a reference implementation of the Commerce Extensibility Framework. It includes sample code for extending the following services:
 
-- Apex classes
-- Tests
-- Resource files
+- Pricing
+- Shipping Calculator
+- Tax Calculator
 
-**Warning**: Sample code is provided "as is" for demonstration purposes only and must not be used unmodified in a production system.
+Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
-## Shipping Calculator
+Live Heroku services are used to simulate a connection to a third-party system. You can bypass the Heroku service and use mocked data instead.
 
-The sample code for Shipping Calculator includes an Apex class (in `ShippingCalculatorSample.apxc`) that calls an external service to retrieve shipping rates and then save that rate as an additional charge in the `CartItems` list.
-
-**Warning**: This sample code uses a live Heroku service to showcase how to use a third-party integration to retrieve shipping options. The function `getShippingOptionsAndRatesFromExternalService` responds with hardcoded shipping options. If you need to bypass the live call, use `getShippingOptionsAndRatesFromMockedService` instead.
-
-A test class is also included for reference.
+**Warning**: The sample code and Heroku services are provided "as is" for demonstration purposes only. Do not use the source code in a production system without modifying and testing it first. And do not use the Heroku services in a production system under any circumstances.
 
 ## Pricing Service
 
 The sample code for Pricing Service includes an Apex class (in `PricingServiceSample.apxc`) that calls an external service to retrieve product prices and then saves that price in the `PricingResponseItems` list.
 
-**Warning**: This sample code uses a live Heroku service to showcase how to use a third-party integration to retrieve product prices in the function `getPricesFromExternalService`. If you need to bypass the live call, please use mocked data instead.
+## Shipping Calculator
 
-A test class is also included for reference.
+The sample code for Shipping Calculator includes an Apex class (in `ShippingCalculatorSample.apxc`) that calls an external service to retrieve shipping rates and then save that rate as an additional charge in the `CartItems` list.
+
+## Tax Calculator
+
+The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSample.apxc`) that calls an external service to retrieve tax information and then save those taxes in `CartTaxes` in `CartItems` and `CartItemAdjustments`.
 
 ## Error Handling
 
