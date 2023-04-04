@@ -8,9 +8,9 @@ This repository contains a reference implementation of the Commerce Extensibilit
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
-A live Heroku service is used to simulate a connection to a third-party system. You can bypass the Heroku service and use mocked data instead.
+Live Heroku services are used to simulate a connection to a third-party system. You can bypass the Heroku service and use mocked data instead.
 
-**Warning**: Sample code is provided "as is" for demonstration purposes only and must not be used unmodified in a production system.
+**Warning**: The sample code and Heroku services are provided "as is" for demonstration purposes only. Do not use the source code in a production system without modifying and testing it first. And do not use the Heroku services in a production system under any circumstances.
 
 ## Pricing Service
 
