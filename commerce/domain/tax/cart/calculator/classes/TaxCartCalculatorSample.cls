@@ -1,11 +1,6 @@
-// This example of Tax Calculator includes an Apex class (TaxCartCalculatorSample.apex) that makes a call to an external service
-// to retrieve tax information for cart item and its adjustments and saves it to cart tax of cart dtos(salesforce structure).
-// This must implement the CartExtension.AbstractCartCalculator interface in order to be processed by
-// the checkout flow and used for your Taxes integration.
-// This implementation is just a sample with hardcoded Heroku api call to fetch Tax information and MUST NOT be used in production systems.
-// User should change this as per their requirements.
-// The function getTaxesFromExternalService gives you the facility to call any external service.
-// to get tax data. Right now its configured with a sample heroku api.
+// This tax calculator extension class makes a call to an external service to retrieve tax information for a cart 
+// item and its adjustments and saves it to a cart data transfer object (DTO).
+// For a tax calcular extension to be processed by the checkout flow, you must implement the CartExtension.AbstractCartCalculator class.
 public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
     public virtual override void calculate(CartExtension.CartCalculationRequest request) {
         try
@@ -13,8 +8,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
             CartExtension.Cart cart = request.getCart();
             System.debug('In Tax Calculator');
 
-            // Clean up CVO based on Tax. When new tax calculator request comes, we need to clean up previous
-            // CVOs as they have been previously handled by cart summary api.
+            // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up previous
+            // CVOs as they have been previously handled by the cart summary API.
             CartExtension.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
             for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--) {
                 CartExtension.CartValidationOutput cvo =  cartValidationOutputCollection.get(i);
@@ -24,24 +19,22 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
             }
 
             // There should be one delivery group per cart.
-            // In the future, when multiple delivery groups can be created,
-            // this sample should be updated to loop through all delivery groups.
             CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
             CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
-            // Create map of cart id to cart item
+            // Map cart ID to cart item.
             CartExtension.CartItemCollection cartItemCollection = cart.getCartItems();
             Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
             for (Integer i = (cartItemCollection.size()-1) ; i>= 0 ; i--) {
                 cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
             }
 
-            // Get the tax rates and tax amounts from an external service for all given products and its adjustments
+            // Get the tax rates and tax amounts from an external service for all given products and its adjustments.
             Map<String, TaxDataFromExternalService> dataFromExternalService = getTaxesFromExternalService(
             cartItemById, CartDeliveryGroup.getDeliverToAddress().getState(), CartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
 
-            // Add cart validation output entry if no tax details are returned for any cart item.
-            // If any invalid scenario found then return
+            // If no tax details are returned for any cart item, add a cart validation output entry.
+            // If any invalid scenario found then return.
             boolean isCvoPresent = false;
             for (String cartItemId : cartItemById.keySet()) {
                 TaxDataFromExternalService taxDetails = dataFromExternalService.get(cartItemId);
@@ -61,12 +54,12 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
                 TaxDataFromExternalService taxDetailsToCartId = dataFromExternalService.get(cartItemId);
                 CartExtension.CartItem cartItem = cartItemById.get(cartItemId);
 
-                // NOTE : DELETED items get filtered out in the DtoCollection and if there is no tax setup against any cart
-                // item, then thats considered as an invalid scenario and added to CVO.
-                // If cart tax numbers are changed that indicates cart item was MODIFIED, then
-                // 1. delete existing and create new cart tax entries in cart item and cart item adjustments
-                // 2. update cart item tax information
-                // we do not support taxes on tier adjustment right now in extension
+                // NOTE: DELETED items get filtered out in the DtoCollection and if there is no tax setup against any cart
+                // item, then that's considered an invalid scenario and added to CVO.
+                // If cart tax numbers are changed that indicates the cart item was MODIFIED, then:
+                // 1. Delete existing and create new cart tax entries in cart item and cart item adjustments.
+                // 2. Update cart item tax information.
+                // Currently, we do not support taxes on tier adjustment in an extension.
                 boolean isCartItemModified = false;
                 if ((cartItem.getNetUnitPrice() != null && cartItem.getNetUnitPrice() != taxDetailsToCartId.getNetUnitPrice())
                         || !VerifyAdjustmentUpdate(cartItem, taxDetailsToCartId)) {
@@ -79,9 +72,9 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
                 }
 
                 // If there are no existing cart tax entries in the cart item that indicates cart item was newly CREATED in
-                // the cart then,
-                // 1. create new cart tax entries
-                // 2. update cart item tax information
+                // the cart then:
+                // 1. Create new cart tax entries
+                // 2. Update cart item tax information
                 if(cartItem.getCartTaxes() == null || cartItem.getCartTaxes().isEmpty() || isCartItemModified == true) {
                     cartItem.setNetUnitPrice(taxDetailsToCartId.getNetUnitPrice());
                     cartItem.setGrossUnitPrice(taxDetailsToCartId.getGrossUnitPrice());
@@ -91,8 +84,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
                     cartTax.setTaxRate(String.valueOf(taxDetailsToCartId.getRate()));
                     cartTaxCollection.add(cartTax);
 
-                    // add adjustment taxes to cartItemAdjustments of cartItem and
-                    // create CartTaxDto entries for all promotion adjustments
+                    // Add adjustment taxes to cartItemAdjustments of cartItem and
+                    // create CartTaxDto entries for all promotion adjustments.
                     if(taxDetailsToCartId.getItemizedPromotionTaxAmounts() != null
                              && !(taxDetailsToCartId.getItemizedPromotionTaxAmounts().isEmpty()))
                         for (CartAdjustment cipaTax : taxDetailsToCartId.getItemizedPromotionTaxAmounts()) {
@@ -107,16 +100,16 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
             }
         }   catch(Exception e) {
             // For testing purposes, this example treats exceptions as user errors, which means they are displayed to the buyer user.
-            // In production you probably want this to be an admin-type error. In that case, throw the exception here
+            // In production, you probably want exceptions to be admin-type errors. In that case, throw the exception here
             // and make sure that a notification system is in place to let the admin know that the error occurred.
-            // See the readme section about error handling for details about how to create that notification.
+            // See the README section about error handling for details about how to create that notification.
             throw new CalloutException ('There was a problem with the request.');
         }
         return ;
     }
 
     // Verify if taxes from adjustments returned by external service and existing cart has changed.
-    // If returned true then indicates that there an adjustment change.
+    // If returned true then that indicates that there was an adjustment change.
     private Boolean VerifyAdjustmentUpdate(CartExtension.CartItem cartItemDto, TaxDataFromExternalService taxesFromExternalService) {
         List<CartAdjustment> ajustments = taxesFromExternalService.getItemizedPromotionTaxAmounts() == null ? new List<CartAdjustment>()
         : taxesFromExternalService.getItemizedPromotionTaxAmounts();
@@ -136,7 +129,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         return true;
     }
 
-    // Get cartItemAdjustment based on CartAdjustment Id
+    // Get cartItemAdjustment based on its ID.
     private CartExtension.cartItemAdjustment getAdjustmentById(CartExtension.cartItemAdjustmentCollection cipaList, String id) {
         for (Integer i = (cipaList.size()-1) ; i>= 0 ; i--) {
             if(cipaList.get(i).getId() == id)
@@ -145,8 +138,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         return null;
     }
 
-    // This a call to external tax service call. Change this based on your external service.
-    // Transform tax data returned from service into cart id to TaxDataFromExternalService map.
+    // This similartes a call to an external tax service. Change this function based on your external service.
+    // Transform tax data returned from service into cart ID to TaxDataFromExternalService map.
     private Map<String, TaxDataFromExternalService> getTaxesFromExternalService (
             Map<String, CartExtension.CartItem> cartItemById, String state, String country, CartExtension.TaxLocaleType taxType) {
         String requestURL = 'https://b2b-commerce-test.herokuapp.com/get-tax-rates-with-adjustments-post';
@@ -159,7 +152,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         request.setBody(requestBody);
         HttpResponse response = http.send(request);
 
-        // If the request is successful, parse the JSON response
+        // If the request is successful, parse the JSON response.
         if (response.getStatusCode() == 200) {
             Map<String, Object> resultsFromExternalService = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
             Map<String, TaxDataFromExternalService> taxDetailsFromExternalService = new Map<String, TaxDataFromExternalService>();
@@ -189,8 +182,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         }
     }
 
-    // Structure to store the tax data retrieved from external service
-    // This simplifies our ability to access it when storing it in Salesforce's CartTaxDto
+    // Structure to store the tax data retrieved from external service.
+    // This class simplifies our ability to access the data when storing it in Salesforce's CartTaxDto.
     Class TaxDataFromExternalService {
         private Decimal rate;
         private Decimal amount;
