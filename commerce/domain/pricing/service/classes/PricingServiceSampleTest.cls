@@ -9,7 +9,7 @@ private class PricingServiceSampleTest {
     
 
     @isTest static void testProcessPriceIntegration() {
-        // Because test methods don't support Web service callouts, we create a mock response based on a static resource.
+        // Because test methods don't support web service callouts, we create a mock response based on a static resource.
         // To create the static resource from the Developer Console, select File | New | Static Resource
         StaticResourceCalloutMock mock = new StaticResourceCalloutMock();
         mock.setStaticResource('GetProductPricesResource');
