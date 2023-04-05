@@ -1,13 +1,12 @@
-//This sample is for the situations where Shipping Calculation needs to be extended or overriden via the extension point for the Shipping Calculator.
-//The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
+// This sample is for the situations where Shipping Calculation needs to be extended or overridden via the extension point for the Shipping Calculator.
+// The Custom Apex Class must be linked to the Shipping Calculator extension point and then the integration must be linked to the webstore via appropriate Setup
 
-//This must extend the CartExtension.ShippingCartCalculator class in order to be processed.
+// This class must extend the CartExtension.ShippingCartCalculator class to be processed.
 public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
 
     public virtual override void calculate(CartExtension.CartCalculationRequest request) {
         CartExtension.Cart cart = request.getCart();
-        
-        //Clean up CVO based on Shipping
+        // Clean up CVO based on Shipping
         CartExtension.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
 
         for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--){
@@ -17,7 +16,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
            }
         }
 
-        // We need to get the ID of the cart delivery group in order to create the Cart delivery group Methods.
+        // To create the Cart delivery group methods, we need to get the ID of the cart delivery group.
         CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
         if(cartDeliveryGroups.size() == 0){
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
@@ -28,12 +27,10 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         else {
             CartExtension.CartItemCollection cartItems = cart.getCartItems();
             Integer numberOfUniqueItems = cartItems.size();
-
-            //Currently only one CartDeliveryGroup is supported
             CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
             CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
-            //clean up the CartDeliveryGroupMethods
+            // Clean up the CartDeliveryGroupMethods
             for (Integer i = (cartDeliveryGroupMethods.size()-1) ; i>= 0 ; i--){
             CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
             cartDeliveryGroupMethods.remove(method);
@@ -42,18 +39,18 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             // Get shipping options, including aspects like rates and carriers, from the external service.
             ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(numberOfUniqueItems);
 
-            // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method which matches
+            // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method that matches
             populateCartDeliveryGroupMethodWithShippingOptions(shippingOptionsAndRatesFromExternalService, cartDeliveryGroupMethods, cartValidationOutputCollection);
         }
     }
 
-    //Note: This method in the sample currently only takes in numberOfUniqueItems as an input, but the parameter list may be expanded in real-world scenarios
+    // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For real-world scenarios, expand the parameter list.
     private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService (Integer numberOfUniqueItems) {
         final Integer SuccessfulHttpRequest = 200;
         ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
         Http http = new Http();
         HttpRequest request = new HttpRequest();
-        // To access the service below, you may need to add endpoint = https://b2b-commerce-test.herokuapp.com in Setup | Security | Remote site settings.
+        // To access the service below, add https://b2b-commerce-test.herokuapp.com as an endpoint in Setup > Security > Remote site settings.
         request.setEndpoint('https://b2b-commerce-test.herokuapp.com/calculate-shipping-rates-winter-21');
         request.setMethod('GET');
         HttpResponse response = http.send(request);
@@ -137,7 +134,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                     String odmId = Id.valueOf((String)odm.id);
                     if(odm.carrier == carrier && odm.classOfService == classOfService){
                         // Create a CartDeliveryGroupMethod for every shipping option returned from the external service
-                        CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(shippingOption.getName(), odmId, shippingOption.getRate());
+                        CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(shippingOption.getName(),odmId, shippingOption.getRate());
                         cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
                         cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
                     }
