@@ -51,7 +51,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
             response.setCurrencyIsoCode(newCurrency);
         }
 
-        // Override unit as well as list prices by increasing them by a fixed amount, only for successsful responses
+        // Override unit price and list price by increasing them by a fixed amount (only for successful responses)
         Decimal fixedAmountIncrease = 10;
         commercestorepricing.PricingResponseItemCollection itemCollection = response.getPricingResponseItems();
         for(Integer i = 0; i < itemCollection.size(); i++){
