@@ -7,6 +7,7 @@
 // This must implement the commercestorepricing.PricingService class in order to be processed by the pricing flow.
 public class PricingServiceSample extends commercestorepricing.PricingService {
 
+    
     // Override processPrice method in order to change behavior of the pricing of single product
     //
     // Fields that can be overriden are:
@@ -50,13 +51,15 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
             response.setCurrencyIsoCode(newCurrency);
         }
 
-        // Override unit as well as list prices by increasing them by a fixed amount
+        // Override unit price and list price by increasing them by a fixed amount (only for successful responses)
         Decimal fixedAmountIncrease = 10;
         commercestorepricing.PricingResponseItemCollection itemCollection = response.getPricingResponseItems();
         for(Integer i = 0; i < itemCollection.size(); i++){
             commercestorepricing.PricingResponseItem item = itemCollection.get(i);
-            item.setListPrice(item.getListPrice() + fixedAmountIncrease);
-            item.setNegotiatedPrice(item.getNegotiatedPrice() + fixedAmountIncrease);
+            if(item.isSuccess()){
+                item.setListPrice(item.getListPrice() + fixedAmountIncrease);
+                item.setNegotiatedPrice(item.getNegotiatedPrice() + fixedAmountIncrease);            
+            }
         }
         return response;
     }
@@ -148,6 +151,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
         return mappedCurrencies;
     }
 
+    @TestVisible
     private String appendField(String prefix, String field){
         // Customers can easily change the string IDs returned by Salesforce Internal Pricing API
         return prefix + field;
