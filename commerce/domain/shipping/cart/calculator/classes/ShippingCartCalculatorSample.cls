@@ -5,19 +5,16 @@
 public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
 
     public virtual override void calculate(CartExtension.CartCalculationRequest request) {
-
         CartExtension.Cart cart = request.getCart();
-
         // Clean up CVO based on Shipping
         CartExtension.CartValidationOutputCollection cartValidationOutputCollection  = cart.getCartValidationOutputs();
 
         for (Integer i = (cartValidationOutputCollection.size()-1) ; i>= 0 ; i--){
                 CartExtension.CartValidationOutput cvo =  cartValidationOutputCollection.get(i);
-                if(cvo.getType() == sCartExtension.CartValidationOutputTypeEnum.SHIPPING){
+                if(cvo.getType() == CartExtension.CartValidationOutputTypeEnum.SHIPPING){
                     cartValidationOutputCollection.remove(cvo);
            }
         }
-
 
         // To create the Cart delivery group methods, we need to get the ID of the cart delivery group.
         CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
@@ -27,15 +24,10 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             cvo.setMessage('No Cart Delivery Groups have been defined');
             cartValidationOutputCollection.add(cvo);
         }
-
         else {
-
             CartExtension.CartItemCollection cartItems = cart.getCartItems();
             Integer numberOfUniqueItems = cartItems.size();
-
-
             CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
-
             CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
             // Clean up the CartDeliveryGroupMethods
@@ -49,16 +41,13 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
             // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service and every Order Delivery Method that matches
             populateCartDeliveryGroupMethodWithShippingOptions(shippingOptionsAndRatesFromExternalService, cartDeliveryGroupMethods, cartValidationOutputCollection);
-
         }
     }
 
     // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For real-world scenarios, expand the parameter list.
     private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService (Integer numberOfUniqueItems) {
         final Integer SuccessfulHttpRequest = 200;
-
         ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
-
         Http http = new Http();
         HttpRequest request = new HttpRequest();
         // To access the service below, add https://b2b-commerce-test.herokuapp.com as an endpoint in Setup > Security > Remote site settings.
@@ -131,14 +120,12 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
     private void populateCartDeliveryGroupMethodWithShippingOptions(List<ShippingOptionsAndRatesFromExternalService> shippingOptions,
             CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection, CartExtension.CartValidationOutputCollection cartValidationOutputCollection) {
         List<OrderDeliveryMethod> odms = [SELECT Id, ProductId, Carrier, ClassOfService, IsActive FROM OrderDeliveryMethod];
-
         if(odms.size()==0){
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
                     CartExtension.CartValidationOutputLevelEnum.ERROR );
             cvo.setMessage('No Order Delivery Methods have been defined');
             cartValidationOutputCollection.add(cvo);
         }
-
         else{
               for (ShippingOptionsAndRatesFromExternalService shippingOption: shippingOptions) {
                  for(OrderDeliveryMethod odm :odms){
@@ -146,7 +133,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                     String classOfService = shippingOption.provider;
                     String odmId = Id.valueOf((String)odm.id);
                     if(odm.carrier == carrier && odm.classOfService == classOfService){
-                        // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
+                        // Create a CartDeliveryGroupMethod for every shipping option returned from the external service
                         CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(shippingOption.getName(),odmId, shippingOption.getRate());
                         cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
                         cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
