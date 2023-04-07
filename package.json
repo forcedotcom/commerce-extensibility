@@ -1,0 +1,30 @@
+{
+  "name": "commerce-extensibility",
+  "version": "1.0.0",
+  "description": "Sample code for implementing Salesforce Commerce extensions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forcedotcom/commerce-extensibility.git"
+  },
+  "keywords": [
+    "salesforce",
+    "commerce",
+    "extension",
+    "apex"
+  ],
+  "author": "Salesforce",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/forcedotcom/commerce-extensibility/issues"
+  },
+  "homepage": "https://github.com/forcedotcom/commerce-extensibility#readme",
+  "devDependencies": {
+    "prettier": "2.8.7",
+    "prettier-plugin-apex": "1.8.0"
+  }
+}
