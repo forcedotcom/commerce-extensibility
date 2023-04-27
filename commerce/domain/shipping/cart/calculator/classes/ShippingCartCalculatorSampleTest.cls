@@ -30,7 +30,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         // Arrange
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
         // Because test methods don't support Web service callouts, we create a mock response based on a static resource.
-        // To create the static resource from the Developer Console, select File | New | Static Resource
+        // To create the static resource from the Developer Console, select File > New > Static Resource
         // The response should look like
         // [{"status":"calculated","rate":{"name":"Delivery Method 1","serviceName":"Test Carrier 1","serviceCode":"SNC9600","shipmentCost":11.99,"otherCost":5.99}},
         // {"status":"calculated","rate":{"name":"Delivery Method 2","serviceName":"Test Carrier 2","serviceCode":"SNC9600","shipmentCost":15.99,"otherCost":6.99}}]
@@ -61,7 +61,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         // Arrange
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
         // Because test methods don't support Web service callouts, we create a mock response based on a static resource.
-        // To create the static resource from the Developer Console, select File | New | Static Resource
+        // To create the static resource from the Developer Console, select File > New > Static Resource
         // The response should look like
         // [{"status":"calculated","rate":{"name":"Delivery Method 1","serviceName":"Test Carrier 1","serviceCode":"SNC9600","shipmentCost":11.99,"otherCost":5.99}},
         // {"status":"calculated","rate":{"name":"Delivery Method 2","serviceName":"Test Carrier 2","serviceCode":"SNC9600","shipmentCost":15.99,"otherCost":6.99}}]
@@ -91,7 +91,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         // Arrange
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
         // Because test methods don't support Web service callouts, we create a mock response based on a static resource.
-        // To create the static resource from the Developer Console, select File | New | Static Resource
+        // To create the static resource from the Developer Console, select File > New > Static Resource
         // The response should look like
         // [{"status":"calculated","rate":{"name":"Delivery Method 1","serviceName":"Test Carrier 1","serviceCode":"SNC9600","shipmentCost":11.99,"otherCost":5.99}},
         // {"status":"calculated","rate":{"name":"Delivery Method 2","serviceName":"Test Carrier 2","serviceCode":"SNC9600","shipmentCost":15.99,"otherCost":6.99}}]
@@ -138,7 +138,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
       insert(defaultOrderDeliveryMethod);
       CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
        // Because test methods don't support Web service callouts, we create a mock response based on a static resource.
-       // To create the static resource from the Developer Console, select File | New | Static Resource
+       // To create the static resource from the Developer Console, select File > New > Static Resource
        StaticResourceCalloutMock mock = new StaticResourceCalloutMock();
        mock.setStaticResource('GetDeliveryRatesResource');
        mock.setStatusCode(200);
