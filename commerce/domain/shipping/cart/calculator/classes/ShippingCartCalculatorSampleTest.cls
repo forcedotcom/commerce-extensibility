@@ -11,12 +11,14 @@ global with sharing class ShippingCartCalculatorSampleTest {
         CartExtension.CartDeliveryGroupCollection deliveryGroups = cart.getCartDeliveryGroups();
         CartExtension.CartDeliveryGroup deliveryGroup = deliveryGroups.get(0);
         deliveryGroups.remove(deliveryGroup);
+
         // Act
         Test.startTest();
         CartExtension.CartCalculationRequest request = new CartExtension.CartCalculationRequest(cart);
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
+
         // Assert
         CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(1, cartValidationOutputs.size());
@@ -47,13 +49,14 @@ global with sharing class ShippingCartCalculatorSampleTest {
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
+
         // Assert
         // Test if a CVO is created
         CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(1, cartValidationOutputs.size());
         CartExtension.CartValidationOutput cvo =  cartValidationOutputs.get(0);
         System.assertEquals(CartExtension.CartValidationOutputTypeEnum.SHIPPING, cvo.getType());
-        System.assertEquals('There was a problem with the request. Error: 404', cvo.getMessage());
+        System.assertEquals('We failed to calculate shipping options for your cart.', cvo.getMessage());
     }
 
      @IsTest
@@ -69,6 +72,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         mock.setStaticResource('EmptyJson');
         mock.setStatusCode(500);
         mock.setHeader('Content-Type', 'application/json;charset=UTF-8');
+
         // Act
         Test.startTest();
         // Associate the callout with a mock response.
@@ -77,13 +81,14 @@ global with sharing class ShippingCartCalculatorSampleTest {
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
+
         // Assert
         // Test if a CVO is created
         CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(1, cartValidationOutputs.size());
         CartExtension.CartValidationOutput cvo =  cartValidationOutputs.get(0);
         System.assertEquals(CartExtension.CartValidationOutputTypeEnum.SHIPPING, cvo.getType());
-        System.assertEquals('There was a problem with the request. Error: 500', cvo.getMessage());
+        System.assertEquals('We failed to calculate shipping options for your cart.', cvo.getMessage());
     }
 
      @IsTest
@@ -99,6 +104,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         mock.setStaticResource('GetDeliveryRatesResource');
         mock.setStatusCode(200);
         mock.setHeader('Content-Type', 'application/json;charset=UTF-8');
+
         // Act
         Test.startTest();
         // Associate the callout with a mock response.
@@ -107,13 +113,14 @@ global with sharing class ShippingCartCalculatorSampleTest {
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
+
         // Assert
         // Test if a CVO is created
         CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(1, cartValidationOutputs.size());
         CartExtension.CartValidationOutput cvo =  cartValidationOutputs.get(0);
         System.assertEquals(CartExtension.CartValidationOutputTypeEnum.SHIPPING, cvo.getType());
-        System.assertEquals('No Order Delivery Methods have been defined', cvo.getMessage());
+        System.assertEquals('There was an issue calculating shipping options for your cart. Please contact your admin.', cvo.getMessage());
     }
 
      @IsTest
@@ -143,6 +150,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
        mock.setStaticResource('GetDeliveryRatesResource');
        mock.setStatusCode(200);
        mock.setHeader('Content-Type', 'application/json;charset=UTF-8');
+
        // Act
         Test.startTest();
        // Associate the callout with a mock response.
@@ -151,6 +159,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
        ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
        calculator.calculate(request);
        Test.stopTest();
+
        // Assert
        // Test if no CVO is created
        CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
@@ -164,5 +173,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
        System.assertEquals(1, deliveryMethodCollection.size());
        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethodCollection.get(0);
        System.assertEquals(11.99, deliveryMethod.getShippingFee());
+       System.assertEquals('Delivery Method 1', deliveryMethod.getName());
+       System.assertEquals('SNC9600', deliveryMethod.getExternalProvider());
    }
 }

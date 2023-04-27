@@ -98,7 +98,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         CartExtension.CartValidationOutputTypeEnum.SHIPPING,
         CartExtension.CartValidationOutputLevelEnum.ERROR
       );
-      cvo.setMessage('There was a problem with the request. Error: ' + response.getStatusCode());
+      cvo.setMessage('We failed to calculate shipping options for your cart.');
       cartValidationOutputCollection.add(cvo);
       return null;
     }
@@ -161,7 +161,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         CartExtension.CartValidationOutputTypeEnum.SHIPPING,
         CartExtension.CartValidationOutputLevelEnum.ERROR
       );
-      cvo.setMessage('No Order Delivery Methods have been defined');
+      cvo.setMessage('There was an issue calculating shipping options for your cart. Please contact your admin.');
       cartValidationOutputCollection.add(cvo);
     } else {
       for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
