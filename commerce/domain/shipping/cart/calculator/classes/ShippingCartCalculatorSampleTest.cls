@@ -116,7 +116,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         System.assertEquals('No Order Delivery Methods have been defined', cvo.getMessage());
     }
 
-    @IsTest
+     @IsTest
    static void testShippingMethodsAreCreated() {
      // Arrange
      // Create Product
@@ -162,5 +162,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
        CartExtension.CartDeliveryGroupMethodCollection deliveryMethodCollection = deliveryGroup.getCartDeliveryGroupMethods();
        System.assertEquals(1, deliveryMethodCollection.size());
+       CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethodCollection.get(0);
+       System.assertEquals(11.99, deliveryMethod.getShippingFee());
    }
 }
