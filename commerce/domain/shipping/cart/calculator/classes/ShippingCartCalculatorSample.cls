@@ -40,23 +40,25 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
       // Get shipping options, including aspects like rates and carriers, from the external service.
       ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
-        numberOfUniqueItems
+        numberOfUniqueItems, cartValidationOutputCollection
       );
 
       // Create a CartDeliveryGroupMethod record for every shipping option returned from the external
       // service and every Order Delivery Method that matches
-      populateCartDeliveryGroupMethodWithShippingOptions(
-        shippingOptionsAndRatesFromExternalService,
-        cartDeliveryGroupMethods,
-        cartValidationOutputCollection
-      );
+      if(shippingOptionsAndRatesFromExternalService != null){
+          populateCartDeliveryGroupMethodWithShippingOptions(
+            shippingOptionsAndRatesFromExternalService,
+            cartDeliveryGroupMethods,
+            cartValidationOutputCollection
+          );
+      }
     }
   }
 
   // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For
   // real-world scenarios, expand the parameter list.
   private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService(
-    Integer numberOfUniqueItems
+    Integer numberOfUniqueItems, CartExtension.CartValidationOutputCollection cartValidationOutputCollection
   ) {
     final Integer SuccessfulHttpRequest = 200;
     ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
@@ -91,10 +93,14 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
       }
       return shippingOptions;
     } else {
-      // Make it as a CVO of the type Shipping or keep it as CartSummaryAdminException?
-      throw new CalloutException(
-        'There was a problem with the request. Error: ' + response.getStatusCode()
+      // Create a CVO with the Error
+      CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+        CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+        CartExtension.CartValidationOutputLevelEnum.ERROR
       );
+      cvo.setMessage('There was a problem with the request. Error: ' + response.getStatusCode());
+      cartValidationOutputCollection.add(cvo);
+      return null;
     }
   }
 
