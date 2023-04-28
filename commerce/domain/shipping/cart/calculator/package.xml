@@ -2,7 +2,17 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>ShippingCartCalculatorSample</members>
+        <members>ShippingCartCalculatorSampleTest</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+    <types>
+        <members>GetDeliveryRatesResource</members>
+        <members>EmptyJson</members>
+        <name>StaticResource</name>
     </types>
     <version>58.0</version>
 </Package>
