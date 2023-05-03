@@ -8,17 +8,19 @@ public class OrchestratorSample extends CartExtension.CartSummary {
     public virtual override void calculate(CartExtension.CartSummaryCalculationRequest request) {
 
         CartExtension.Cart cart = request.getCart();
+        CartExtension.CartStatusEnum cartStatus = cart.getStatus();
+        CartExtension.CartValidationOutputCollection cvoCollection  = cart.getCartValidationOutputs();
 
         //We might want to determine the calculator we call based on the state of the cart.
         if(cartStatus == CartExtension.CartStatusEnum.ACTIVE) {
             //Order matters, so the inventory calculator will finish executing before the pricing calculator starts
             //If the inventory calculator writes to the CVO, however, we will finish execution early instead of calling the other calculators
             inventory(new CartExtension.CartCalculationRequest(cart));
-            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {return};
+            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {return;}
             prices(new CartExtension.CartCalculationRequest(cart));
-            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.PRICING)) {return};
+            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.PRICING)) {return;}
             promotions(new CartExtension.CartCalculationRequest(cart));
-            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {return};
+            if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {return;}
         }
 
         if(cartStatus == CartExtension.CartStatusEnum.CHECKOUT) {
@@ -27,7 +29,7 @@ public class OrchestratorSample extends CartExtension.CartSummary {
 
     }
 
-    public void hasErrorsInCVO(CartExtension.CartValidationOutputCollection cvoCollection, CartExtension.CartValidationOutputTypeEnum calculatorType) {
+    public Boolean hasErrorsInCVO(CartExtension.CartValidationOutputCollection cvoCollection, CartExtension.CartValidationOutputTypeEnum calculatorType) {
         for (Integer i = (cvoCollection.size()-1) ; i>= 0 ; i--) {
             CartExtension.CartValidationOutput current_cvo =  cvoCollection.get(i);
             if(current_cvo.getType() == calculatorType) {
