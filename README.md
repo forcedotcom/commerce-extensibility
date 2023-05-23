@@ -48,3 +48,27 @@ To deploy this reference implementation, use Workbench:
 5. Check the **Single Package** checkbox.
 6. Click **Next**.
 7. Click **Deploy**.
+
+## Contributions
+
+We are not currently accepting external contributions to this repository.
+
+## Issues
+
+If you’re experiencing an issue with the sample code, check the open issues first. If someone hasn’t already raised the same issue, file a new issue with a description of the issue and describe the steps to reproduce it. If you require an urgent response to your issue, file a support ticket with Salesforce Commerce Cloud. You can also create an issue to request a new feature or suggest improvements.
+
+## Code of Conduct
+
+We expect all users of this repository to follow the [Salesforce Open Source Community Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Please report any security issue to security@salesforce.com as soon as it is discovered.
+
+## License
+
+The sample code is licensed under a BSD 3-Clause license. See the [license](LICENSE.txt) for details.
+
+## Forward-Looking Statements
+
+This repository may contain forward-looking statements that involve risks, uncertainties, and assumptions. For more information, see [STATEMENTS](STATEMENTS.md)
