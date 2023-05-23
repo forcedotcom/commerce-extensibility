@@ -71,4 +71,4 @@ The sample code is licensed under a BSD 3-Clause license. See the [license](LICE
 
 ## Forward-Looking Statements
 
-This repository may contain forward-looking statements that involve risks, uncertainties, and assumptions. For more information, see [STATEMENTS](STATEMENTS.md)
+This repository may contain forward-looking statements that involve risks, uncertainties, and assumptions. For more information, see [STATEMENTS](STATEMENTS.md).
