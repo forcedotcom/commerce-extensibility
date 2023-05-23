@@ -55,7 +55,7 @@ We are not currently accepting external contributions to this repository.
 
 ## Issues
 
-If you’re experiencing an issue with the sample code, check the open issues first. If someone hasn’t already raised the same issue, file a new issue with a description of the issue and describe the steps to reproduce it. If you require an urgent response to your issue, file a support ticket with Salesforce Commerce Cloud. You can also create an issue to request a new feature or suggest improvements.
+We are not currently tracking issues through GitHub. If you’re experiencing an issue with the sample code, reach out to your Salesforce representative.
 
 ## Code of Conduct
 
