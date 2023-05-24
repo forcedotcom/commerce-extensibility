@@ -48,3 +48,27 @@ To deploy this reference implementation, use Workbench:
 5. Check the **Single Package** checkbox.
 6. Click **Next**.
 7. Click **Deploy**.
+
+## Contributions
+
+We are not currently accepting external contributions to this repository.
+
+## Issues
+
+We are not currently tracking issues through GitHub. If you’re experiencing an issue with the sample code, reach out to your Salesforce representative.
+
+## Code of Conduct
+
+We expect all users of this repository to follow the [Salesforce Open Source Community Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+Please report any security issue to security@salesforce.com as soon as it is discovered.
+
+## License
+
+The sample code is licensed under a BSD 3-Clause license. See the [license](LICENSE.txt) for details.
+
+## Forward-Looking Statements
+
+This repository may contain forward-looking statements that involve risks, uncertainties, and assumptions. For more information, see [STATEMENTS](STATEMENTS.md).
