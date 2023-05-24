@@ -1,5 +1,5 @@
 /*
- * This is a sample orchestrator that calls the inventory, pricing, promotions and tax calculators
+ * This is a sample orchestrator that calls the inventory, pricing, promotions, shipping and tax calculators
  * at a step level. This class must be linked to the orchestrator extension point (Commerce_Domain_Cart_Summary)
  * for orchestrators and then the extension must be linked to the webstore via the appropriate setup.
  */
@@ -28,7 +28,7 @@ public class CartSummarySample extends CartExtension.CartSummary {
             inventory(new CartExtension.CartCalculationRequest(cart));
             if(hasErrorsInCVO(cvoCollection, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {return;}
             /*
-            * In order to be able to successfully place an order, Delivery Group must have associated Delivery Method.
+            * In order to be able to successfully place an order, each Delivery Group must have associated Delivery Method.
             */
             for (Integer i = 0; i < cart.getCartDeliveryGroups().size(); i++) {
                     CartExtension.CartDeliveryGroup cartDeliveryGroup = cart.getCartDeliveryGroups().get(i);
