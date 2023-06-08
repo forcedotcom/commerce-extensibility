@@ -75,8 +75,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
           !VerifyAdjustmentUpdate(cartItem, taxDetailsToCartId)
         ) {
           cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
-          for (Integer i = (cartItem.getCartItemAdjustments().size() - 1); i >= 0; i--) {
-            CartExtension.CartTaxCollection cipaTaxes = cartItem.getCartItemAdjustments()
+          for (Integer i = (cartItem.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
+            CartExtension.CartTaxCollection cipaTaxes = cartItem.getCartItemPriceAdjustments()
               .get(i)
               .getCartTaxes();
             cipaTaxes.remove(cipaTaxes.get(0));
@@ -95,6 +95,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         ) {
           cartItem.setNetUnitPrice(taxDetailsToCartId.getNetUnitPrice());
           cartItem.setGrossUnitPrice(taxDetailsToCartId.getGrossUnitPrice());
+          cartItem.setAdjustmentTaxAmount(taxDetailsToCartId.getAdjustmentTaxAmount());
           CartExtension.CartTaxCollection cartTaxCollection = cartItem.getCartTaxes();
           CartExtension.CartTax cartTax = new CartExtension.CartTax(
             CartExtension.TaxTypesEnum.ESTIMATED,
@@ -117,8 +118,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
                 taxDetailsToCartId.getTaxName()
               );
               promoTax.setTaxRate(String.valueOf(taxDetailsToCartId.getRate()));
-              CartExtension.cartItemAdjustment adj = getAdjustmentById(
-                cartItem.getCartItemAdjustments(),
+              CartExtension.cartItemPriceAdjustment adj = getAdjustmentById(
+                cartItem.getCartItemPriceAdjustments(),
                 cipaTax.getId()
               );
               adj.getCartTaxes().add(promoTax);
@@ -147,8 +148,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       ? new List<CartAdjustment>()
       : taxesFromExternalService.getItemizedPromotionTaxAmounts();
 
-    for (Integer i = (cartItemDto.getCartItemAdjustments().size() - 1); i >= 0; i--) {
-      CartExtension.CartTaxCollection cartTaxes = cartItemDto.getCartItemAdjustments()
+    for (Integer i = (cartItemDto.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
+      CartExtension.CartTaxCollection cartTaxes = cartItemDto.getCartItemPriceAdjustments()
         .get(i)
         .getCartTaxes();
       for (Integer j = (cartTaxes.size() - 1); j >= 0; j--) {
@@ -165,8 +166,8 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
   }
 
   // Get cartItemAdjustment based on its ID.
-  private CartExtension.cartItemAdjustment getAdjustmentById(
-    CartExtension.cartItemAdjustmentCollection cipaList,
+  private CartExtension.cartItemPriceAdjustment getAdjustmentById(
+    CartExtension.cartItemPriceAdjustmentCollection cipaList,
     String id
   ) {
     for (Integer i = (cipaList.size() - 1); i >= 0; i--) {
