@@ -9,7 +9,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       System.debug('In Tax Calculator');
 
       // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
-      // previous CVOs as they have been previously handled by the cart summary API.
+      // previous CVOs as they have been previously handled by the Cart Calculate API.
       CartExtension.CartValidationOutputCollection cartValidationOutputCollection = cart.getCartValidationOutputs();
       for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
         CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
