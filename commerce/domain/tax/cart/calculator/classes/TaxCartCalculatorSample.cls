@@ -3,7 +3,7 @@
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
 // CartExtension.AbstractCartCalculator class.
 public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
-  public virtual override void calculate(CartExtension.CartCalculationRequest request) {
+  public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     try {
       CartExtension.Cart cart = request.getCart();
       System.debug('In Tax Calculator');
