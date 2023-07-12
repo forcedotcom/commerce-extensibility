@@ -5,7 +5,7 @@
 
 // This class must extend the CartExtension.ShippingCartCalculator class to be processed.
 public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
-  public virtual override void calculate(CartExtension.CartCalculationRequest request) {
+  public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     CartExtension.Cart cart = request.getCart();
     // Clean up CVO based on Shipping
     CartExtension.CartValidationOutputCollection cartValidationOutputCollection = cart.getCartValidationOutputs();

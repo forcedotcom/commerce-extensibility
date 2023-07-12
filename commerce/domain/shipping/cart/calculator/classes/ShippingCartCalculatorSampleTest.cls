@@ -14,7 +14,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
         // Act
         Test.startTest();
-        CartExtension.CartCalculationRequest request = new CartExtension.CartCalculationRequest(cart);
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart);
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
