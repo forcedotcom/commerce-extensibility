@@ -8,29 +8,29 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     CartExtension.Cart cart = request.getCart();
     // Clean up CVO based on Shipping
-    CartExtension.CartValidationOutputCollection cartValidationOutputCollection = cart.getCartValidationOutputs();
+    CartExtension.CartValidationOutputList cartValidationOutputList = cart.getCartValidationOutputs();
 
-    for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
-      CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
+    for (Integer i = (cartValidationOutputList.size() - 1); i >= 0; i--) {
+      CartExtension.CartValidationOutput cvo = cartValidationOutputList.get(i);
       if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.SHIPPING) {
-        cartValidationOutputCollection.remove(cvo);
+        cartValidationOutputList.remove(cvo);
       }
     }
 
     // To create the Cart delivery group methods, we need to get the ID of the cart delivery group.
-    CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
+    CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
     if (cartDeliveryGroups.size() == 0) {
       CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
         CartExtension.CartValidationOutputTypeEnum.SHIPPING,
         CartExtension.CartValidationOutputLevelEnum.ERROR
       );
       cvo.setMessage('No Cart Delivery Groups have been defined');
-      cartValidationOutputCollection.add(cvo);
+      cartValidationOutputList.add(cvo);
     } else {
-      CartExtension.CartItemCollection cartItems = cart.getCartItems();
+      CartExtension.CartItemList cartItems = cart.getCartItems();
       Integer numberOfUniqueItems = cartItems.size();
       CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
-      CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
+      CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
       // Clean up the CartDeliveryGroupMethods
       for (Integer i = (cartDeliveryGroupMethods.size() - 1); i >= 0; i--) {

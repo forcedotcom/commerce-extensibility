@@ -8,7 +8,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
     static void testCartWithNoCartDeliveryGroup() {
         // Arrange
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
-        CartExtension.CartDeliveryGroupCollection deliveryGroups = cart.getCartDeliveryGroups();
+        CartExtension.CartDeliveryGroupList deliveryGroups = cart.getCartDeliveryGroups();
         CartExtension.CartDeliveryGroup deliveryGroup = deliveryGroups.get(0);
         deliveryGroups.remove(deliveryGroup);
 
@@ -20,7 +20,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
         Test.stopTest();
 
         // Assert
-        CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
+        CartExtension.CartValidationOutputList cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(1, cartValidationOutputs.size());
         CartExtension.CartValidationOutput cvo = cartValidationOutputs.get(0);
         System.assertEquals(CartExtension.CartValidationOutputTypeEnum.SHIPPING, cvo.getType());
@@ -41,16 +41,16 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
         // Assert
         // Test if no CVO is created
-        CartExtension.CartValidationOutputCollection cartValidationOutputs = cart.getCartValidationOutputs();
+        CartExtension.CartValidationOutputList cartValidationOutputs = cart.getCartValidationOutputs();
         System.assertEquals(0, cartValidationOutputs.size());
 
         // Test if CartDeliveryGroupMethod is created
-        CartExtension.CartDeliveryGroupCollection deliveryGroups = cart.getCartDeliveryGroups();
+        CartExtension.CartDeliveryGroupList deliveryGroups = cart.getCartDeliveryGroups();
         CartExtension.CartDeliveryGroup deliveryGroup = deliveryGroups.get(0);
 
-        CartExtension.CartDeliveryGroupMethodCollection deliveryMethodCollection = deliveryGroup.getCartDeliveryGroupMethods();
-        System.assertEquals(1, deliveryMethodCollection.size());
-        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethodCollection.get(0);
+        CartExtension.CartDeliveryGroupMethodList deliveryMethods = deliveryGroup.getCartDeliveryGroupMethods();
+        System.assertEquals(1, deliveryMethods.size());
+        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethods.get(0);
         System.assertEquals(11.99, deliveryMethod.getShippingFee());
         System.assertEquals('Delivery Method 1', deliveryMethod.getName());
         System.assertEquals('SNC9600', deliveryMethod.getExternalProvider());
