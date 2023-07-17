@@ -37,150 +37,24 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
         cartDeliveryGroupMethods.remove(method);
       }
+      // To clear selected Cart Delivery Group Method
+      cartDeliveryGroup.setSelectedCartDeliveryGroupMethod(null);
 
-      // Get shipping options, including aspects like rates and carriers, from the external service.
-      ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
-        numberOfUniqueItems, cartValidationOutputCollection
-      );
+      // Get the Shipping Product
+      List<Product2> shippingProducts = [SELECT Id FROM Product2 LIMIT 1];
 
-      // Create a CartDeliveryGroupMethod record for every shipping option returned from the external
-      // service and every Order Delivery Method that matches
-      if(shippingOptionsAndRatesFromExternalService != null){
-          populateCartDeliveryGroupMethodWithShippingOptions(
-            shippingOptionsAndRatesFromExternalService,
-            cartDeliveryGroupMethods,
-            cartValidationOutputCollection
-          );
-      }
-    }
-  }
-
-  // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For
-  // real-world scenarios, expand the parameter list.
-  private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService(
-    Integer numberOfUniqueItems, CartExtension.CartValidationOutputCollection cartValidationOutputCollection
-  ) {
-    final Integer SuccessfulHttpRequest = 200;
-    ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
-    Http http = new Http();
-    HttpRequest request = new HttpRequest();
-    // To access the service below, add https://b2b-commerce-test.herokuapp.com as an endpoint in
-    // Setup > Security > Remote site settings.
-    request.setEndpoint(
-      'https://b2b-commerce-test.herokuapp.com/calculate-shipping-rates-winter-21'
-    );
-    request.setMethod('GET');
-    HttpResponse response = http.send(request);
-
-    // If the request is successful, parse the JSON response. The response looks like this:
-    // [{"status":"calculated","rate":{"name":"Delivery Method 1","serviceName":"Test Carrier 1","serviceCode":"SNC9600","shipmentCost":11.99,"otherCost":5.99}}, undefined undefined
-    // {"status":"calculated","rate":{"name":"Delivery Method 2","serviceName":"Test Carrier
-    // 2","serviceCode":"SNC9600","shipmentCost":15.99,"otherCost":6.99}}]
-    if (response.getStatusCode() == SuccessfulHttpRequest) {
-      List<Object> results = (List<Object>) JSON.deserializeUntyped(response.getBody());
-      for (Object result : results) {
-        Map<String, Object> subresult = (Map<String, Object>) result;
-        Map<String, Object> providerAndRate = (Map<String, Object>) subresult.get('rate');
-        shippingOptions.add(
-          new ShippingOptionsAndRatesFromExternalService(
-            (String) providerAndRate.get('name'),
-            (String) providerAndRate.get('serviceCode'),
-            (Decimal) providerAndRate.get('shipmentCost') * numberOfUniqueItems, // Multiply so shipping costs can change; remove when using a real shipping provider
-            (Decimal) providerAndRate.get('otherCost'),
-            (String) providerAndRate.get('serviceName')
-          )
-        );
-      }
-      return shippingOptions;
-    } else {
-      // Create a CVO with the Error
-      CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-        CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-        CartExtension.CartValidationOutputLevelEnum.ERROR
-      );
-      cvo.setMessage('We failed to calculate shipping options for your cart.');
-      cartValidationOutputCollection.add(cvo);
-      return null;
-    }
-  }
-
-  // Structure to store the shipping options retrieved from external service.
-  class ShippingOptionsAndRatesFromExternalService {
-    private String name;
-    private String provider;
-    private Decimal rate;
-    private Decimal otherCost;
-    private String serviceName;
-
-    public ShippingOptionsAndRatesFromExternalService(
-      String someName,
-      String someProvider,
-      Decimal someRate,
-      Decimal someOtherCost,
-      String someServiceName
-    ) {
-      name = someName;
-      provider = someProvider;
-      rate = someRate;
-      otherCost = someOtherCost;
-      serviceName = someServiceName;
-    }
-
-    public String getProvider() {
-      return provider;
-    }
-
-    public Decimal getRate() {
-      return rate;
-    }
-
-    public Decimal getOtherCost() {
-      return otherCost;
-    }
-
-    public String getServiceName() {
-      return serviceName;
-    }
-
-    public String getName() {
-      return name;
-    }
-  }
-
-  private void populateCartDeliveryGroupMethodWithShippingOptions(
-    List<ShippingOptionsAndRatesFromExternalService> shippingOptions,
-    CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection,
-    CartExtension.CartValidationOutputCollection cartValidationOutputCollection
-  ) {
-    List<OrderDeliveryMethod> odms = [
-      SELECT Id, ProductId, Carrier, ClassOfService, IsActive
-      FROM OrderDeliveryMethod
-    ];
-    if (odms.size() == 0) {
-      CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-        CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-        CartExtension.CartValidationOutputLevelEnum.ERROR
-      );
-      cvo.setMessage('There was an issue calculating shipping options for your cart. Please contact your admin.');
-      cartValidationOutputCollection.add(cvo);
-    } else {
-      for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
-        for (OrderDeliveryMethod odm : odms) {
-          String carrier = shippingOption.serviceName;
-          String classOfService = shippingOption.provider;
-          String odmId = Id.valueOf((String) odm.id);
-          if (odm.carrier == carrier && odm.classOfService == classOfService) {
-            // Create a CartDeliveryGroupMethod for every shipping option returned from the external
-            // service
-            CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(
-              shippingOption.getName(),
-              odmId,
-              shippingOption.getRate()
-            );
-            cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
-            cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
-          }
-        }
+      if(shippingProducts.size() == 0) {
+        CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+                CartExtension.CartValidationOutputLevelEnum.INFO );
+        cvo.setMessage('No Shipping Products have been defined');
+        cartValidationOutputList.add(cvo);
+      } else {
+          String shippingProduct = Id.valueOf(shippingProducts[0].Id);
+          // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
+          CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
+          CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
+          cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
+          cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
       }
     }
   }
