@@ -50,15 +50,15 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
         CartExtension.CartDeliveryGroupMethodList deliveryMethods = deliveryGroup.getCartDeliveryGroupMethods();
         System.assertEquals(2, deliveryMethods.size());
-        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethods.get(0);
-        System.assertEquals(10.99, deliveryMethod.getShippingFee());
-        System.assertEquals('Ground Shipping', deliveryMethod.getName());
-        System.assertEquals('USPS', deliveryMethod.getCarrier());
-        System.assertEquals('Ground Shipping', deliveryMethod.getClassOfService());
-        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethods.get(1);
-        System.assertEquals(15.99, deliveryMethod.getShippingFee());
-        System.assertEquals('Next Day Air', deliveryMethod.getName());
-        System.assertEquals('UPS', deliveryMethod.getCarrier());
-        System.assertEquals('Next Day Air', deliveryMethod.getClassOfService());
+        CartExtension.CartDeliveryGroupMethod deliveryMethod01 = deliveryMethods.get(0);
+        System.assertEquals(10.99, deliveryMethod01.getShippingFee());
+        System.assertEquals('Ground Shipping', deliveryMethod01.getName());
+        System.assertEquals('USPS', deliveryMethod01.getCarrier());
+        System.assertEquals('Ground Shipping', deliveryMethod01.getClassOfService());
+        CartExtension.CartDeliveryGroupMethod deliveryMethod02 = deliveryMethods.get(1);
+        System.assertEquals(15.99, deliveryMethod02.getShippingFee());
+        System.assertEquals('Next Day Air', deliveryMethod02.getName());
+        System.assertEquals('UPS', deliveryMethod02.getCarrier());
+        System.assertEquals('Next Day Air', deliveryMethod02.getClassOfService());
     }
 }
