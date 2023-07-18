@@ -49,10 +49,16 @@ global with sharing class ShippingCartCalculatorSampleTest {
         CartExtension.CartDeliveryGroup deliveryGroup = deliveryGroups.get(0);
 
         CartExtension.CartDeliveryGroupMethodList deliveryMethods = deliveryGroup.getCartDeliveryGroupMethods();
-        System.assertEquals(1, deliveryMethods.size());
+        System.assertEquals(2, deliveryMethods.size());
         CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethods.get(0);
-        System.assertEquals(11.99, deliveryMethod.getShippingFee());
-        System.assertEquals('Delivery Method 1', deliveryMethod.getName());
-        System.assertEquals('SNC9600', deliveryMethod.getExternalProvider());
+        System.assertEquals(10.99, deliveryMethod.getShippingFee());
+        System.assertEquals('Ground Shipping', deliveryMethod.getName());
+        System.assertEquals('USPS', deliveryMethod.getCarrier());
+        System.assertEquals('Ground Shipping', deliveryMethod.getClassOfService());
+        CartExtension.CartDeliveryGroupMethod deliveryMethod = deliveryMethods.get(1);
+        System.assertEquals(15.99, deliveryMethod.getShippingFee());
+        System.assertEquals('Next Day Air', deliveryMethod.getName());
+        System.assertEquals('UPS', deliveryMethod.getCarrier());
+        System.assertEquals('Next Day Air', deliveryMethod.getClassOfService());
     }
 }
