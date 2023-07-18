@@ -45,14 +45,18 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
       if(shippingProducts.size() == 0) {
         CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-                CartExtension.CartValidationOutputLevelEnum.INFO );
+                CartExtension.CartValidationOutputLevelEnum.ERROR );
         cvo.setMessage('No Shipping Products have been defined');
         cartValidationOutputList.add(cvo);
       } else {
           String shippingProduct = Id.valueOf(shippingProducts[0].Id);
           // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
           CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
+          cartDeliveryGroupMethod01.setCarrier('USPS');
+          cartDeliveryGroupMethod01.setClassOfService('Ground Shipping');
           CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
+          cartDeliveryGroupMethod02.setCarrier('UPS');
+          cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
           cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
           cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
       }
