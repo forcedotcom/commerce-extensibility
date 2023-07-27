@@ -3,65 +3,80 @@
 // for orchestrators and then the extension must be linked to the webstore via the appropriate setup.
 
 // This class must extend the CartExtension.CartCalculate class
-public class CartCalculateSample extends CartExtension.CartCalculate {
+global class CartCalculateSample extends CartExtension.CartCalculate {
+
+    /**
+     * @description All classes extending CartExtension.CartCalculate must have a default constructor defined
+     */
+    global CartCalculateSample() {}
+
+    /**
+     * @description This constructor should only be used in a test context
+     * @param apexExecutor Executor which can run the various calculators
+     */
+    global CartCalculateSample(final CartCalculateExecutorForUnitTest apexExecutor) {
+        super(apexExecutor);
+    }
 
     // Each orchestrator must override this calculate method.
-    public virtual override void calculate(CartExtension.CartCalculateOrchestratorRequest request) {
+    global virtual override void calculate(CartExtension.CartCalculateOrchestratorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        CartExtension.CartStatusEnum cartStatus = cart.getStatus();
+
+        // Use BuyerActions to decide which calculators to invoke
+        CartExtension.BuyerActions buyerActions = request.getBuyerActions();
+        boolean runPricing = buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
+        boolean runPromotions = buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
+        boolean runInventory = buyerActions.isCheckoutStarted();
+        boolean runShipping = buyerActions.isDeliveryGroupChanged();
+        boolean runPostShipping = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected();
+        boolean runTaxes = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected();
+
+        // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
+        CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
         CartExtension.CartValidationOutputList cvoList  = cart.getCartValidationOutputs();
 
-        // We might want to determine which calculator we call based on the state of the cart.
-        // This block is executed when starting or modifying checkout.
-        if (cartStatus == CartExtension.CartStatusEnum.CHECKOUT) {
-            // Order matters. If the promotions calculator returns an error, we will finish execution early instead of
-            // calling the other calculators
-            promotions(new CartExtension.CartCalculateCalculatorRequest(cart));
+        if (runPricing) {
+            prices(calculatorRequest);
+
+            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PRICING)) {
+                return;
+            }
+        }
+
+        if (runPromotions) {
+            promotions(calculatorRequest);
 
             if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {
                 return;
             }
+        }
 
-            inventory(new CartExtension.CartCalculateCalculatorRequest(cart));
+        if (runInventory) {
+            inventory(calculatorRequest);
 
             if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {
                 return;
             }
+        }
 
-            // To successfully place an order, each Delivery Group must have an associated Delivery Method.
-            for (Integer i = 0; i < cart.getCartDeliveryGroups().size(); i++) {
-                CartExtension.CartDeliveryGroup cartDeliveryGroup = cart.getCartDeliveryGroups().get(i);
+        if (runShipping) {
+            shipping(calculatorRequest);
 
-                if (cartDeliveryGroup.getDeliverToAddress() != null) {
-                    // If you don't register the Commerce_Domain_Shipping_CartCalculator extension point -
-                    // this creates a free ($0) shipping option (CartDeliveryGroupMethod).
-                    // If you register custom implementation of Commerce_Domain_Shipping_CartCalculator,
-                    // please make sure it always assigns at least one shipping option (CartDeliveryGroupMethod)
-                    // to CartDeliveryGroup.
-                    shipping(new CartExtension.CartCalculateCalculatorRequest(cart));
-
-                    if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
-                        return;
-                    }
-
-                    // This example takes the first available shipping option (CartDeliveryGroupMethod) and uses it as a
-                    // DeliveryMethod for the given CartDeliveryGroup.
-                    if (cartDeliveryGroup.getCartDeliveryGroupMethods().size() > 0) {
-                        String firstCartDeliveryGroupId = cartDeliveryGroup.getCartDeliveryGroupMethods().get(0).getDeliveryMethodId();
-                        cartDeliveryGroup.setDeliveryMethodId(firstCartDeliveryGroupId);
-                    }
-
-                    // Once Delivery Method is selected - calculate taxes.
-                    taxes(new CartExtension.CartCalculateCalculatorRequest(cart));
-                }
+            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
+                return;
             }
         }
 
-        // This block is only executed during cart level operations: add item to cart, edit cart item quantity, and
-        // delete from cart.
-        if (cartStatus == CartExtension.CartStatusEnum.ACTIVE) {
-            // We might only want to compute pricing data during add to cart
-            prices(new CartExtension.CartCalculateCalculatorRequest(cart));
+        if (runPostShipping) {
+            postShipping(calculatorRequest);
+
+            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SYSTEM_ERROR)) {
+                return;
+            }
+        }
+
+        if (runTaxes) {
+            taxes(calculatorRequest);
         }
     }
 
