@@ -187,4 +187,50 @@ public class CartCalculateSampleUnitTest {
         System.assert(cart.getName().contains('TaxesRecalculated'));
         System.assert(cart.getName().contains('PostShippingCompleted'));
     }
+
+    @IsTest
+    public static void shouldRunPromotionsWhenBuyerAddsCoupon() {
+        // Arrange
+        // Create a cart
+        CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
+
+        // Set up BuyerActions as if the Buyer added a coupon
+        CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock();
+        buyerActions.setCouponChanged(true);
+
+        // Set up BuyerActionDetails as if the Buyer added a coupon
+        final boolean isCheckoutStarted = false;
+        CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails(
+            isCheckoutStarted,
+            new List<CartExtension.CartDeliveryGroupChange>(),
+            new List<CartExtension.CartItemChange>(),
+            new List<CartExtension.CouponChange>());
+
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = new CartExtension.OptionalBuyerActionDetails();
+        optionalBuyerActionDetails.of(buyerActionDetails);
+
+        CartExtension.CartCalculateOrchestratorRequest request = new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails);
+
+        final CartCalculateExecutorForUnitTest executor = new CartCalculateExecutorForUnitTest();
+        CartCalculateSample cartCalculateSample = new CartCalculateSample(executor);
+
+        Test.startTest();
+
+        // Act
+        cartCalculateSample.calculate(request);
+        Test.stopTest();
+
+        // Assert
+        // Verify that no CVO was created
+        CartExtension.CartValidationOutputList cartValidationOutputs = cart.getCartValidationOutputs();
+        System.assertEquals(0, cartValidationOutputs.size());
+
+        // Verify that the promotions calculator made changes
+        System.assert(!cart.getName().contains('CartRepriced'));
+        System.assert(cart.getName().contains('PromotionsRecalculated'));
+        System.assert(!cart.getName().contains('InventoryChecked'));
+        System.assert(!cart.getName().contains('ShippingRecalculated'));
+        System.assert(!cart.getName().contains('TaxesRecalculated'));
+        System.assert(!cart.getName().contains('PostShippingCompleted'));
+    }
 }
