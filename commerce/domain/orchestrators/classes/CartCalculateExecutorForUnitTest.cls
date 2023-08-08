@@ -1,6 +1,6 @@
 /**
-* @description Sample mock executor for unit testing a custom orchestrator within Cart Calculate API.
-*/
+ * @description Sample mock executor for unit testing a custom orchestrator within Cart Calculate API.
+ */
 global class CartCalculateExecutorForUnitTest extends CartExtension.CartCalculateExecutorMock {
 
     /**
@@ -10,7 +10,12 @@ global class CartCalculateExecutorForUnitTest extends CartExtension.CartCalculat
 
     global override void prices(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName('CartRepriced');
+
+        if (cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT) {
+            cart.setName(cart.getName() + ', CartRepricedWithExternalCallout');
+        } else {
+            cart.setName(cart.getName() + ', CartRepricedWithEstimate');
+        }
     }
 
     global override void promotions(CartExtension.CartCalculateCalculatorRequest request) {

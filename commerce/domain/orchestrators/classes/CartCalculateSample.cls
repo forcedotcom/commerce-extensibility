@@ -15,6 +15,8 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
      * @param apexExecutor Executor which can run the various calculators
      */
     global CartCalculateSample(final CartCalculateExecutorForUnitTest apexExecutor) {
+        // Call super to set up `CartCalculateExecutorMock` within CartExtension.CartCalculate. This will allow you to
+        // test how each calculator is invoked in unit tests
         super(apexExecutor);
     }
 
@@ -33,12 +35,12 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
-        CartExtension.CartValidationOutputList cvoList  = cart.getCartValidationOutputs();
+        CartExtension.CartValidationOutputList cvoList = cart.getCartValidationOutputs();
 
         if (runPricing) {
             prices(calculatorRequest);
 
-            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PRICING)) {
+            if (hasSpecifiedCalculatorTypeErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PRICING)) {
                 return;
             }
         }
@@ -46,7 +48,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runPromotions) {
             promotions(calculatorRequest);
 
-            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {
+            if (hasSpecifiedCalculatorTypeErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {
                 return;
             }
         }
@@ -54,7 +56,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runInventory) {
             inventory(calculatorRequest);
 
-            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {
+            if (hasSpecifiedCalculatorTypeErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {
                 return;
             }
         }
@@ -62,7 +64,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runShipping) {
             shipping(calculatorRequest);
 
-            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
+            if (hasSpecifiedCalculatorTypeErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
                 return;
             }
         }
@@ -70,7 +72,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runPostShipping) {
             postShipping(calculatorRequest);
 
-            if (hasErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SYSTEM_ERROR)) {
+            if (hasSpecifiedCalculatorTypeErrorsInCVO(cvoList, CartExtension.CartValidationOutputTypeEnum.SYSTEM_ERROR)) {
                 return;
             }
         }
@@ -80,13 +82,15 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         }
     }
 
-    // This function evaluates whether there are errors in the CVO of a specific calculator type.
-    private Boolean hasErrorsInCVO(CartExtension.CartValidationOutputList cvoList,
-                                   CartExtension.CartValidationOutputTypeEnum calculatorType) {
-        for (Integer i = (cvoList.size()-1) ; i>= 0 ; i--) {
-            CartExtension.CartValidationOutput current_cvo = cvoList.get(i);
+    // This function evaluates whether there are CVO errors of a specific calculator type.
+    private Boolean hasSpecifiedCalculatorTypeErrorsInCVO(CartExtension.CartValidationOutputList cartValidationOutputs,
+                                                          CartExtension.CartValidationOutputTypeEnum calculatorType) {
+        Iterator<CartExtension.CartValidationOutput> iterator = cartValidationOutputs.iterator();
 
-            if (current_cvo.getType() == calculatorType && current_cvo.getLevel() == CartExtension.CartValidationOutputLevelEnum.ERROR) {
+        while (iterator.hasNext()) {
+            CartExtension.CartValidationOutput cvo = iterator.next();
+
+            if (cvo.getType() == calculatorType && cvo.getLevel() == CartExtension.CartValidationOutputLevelEnum.ERROR) {
                 return true;
             }
         }
