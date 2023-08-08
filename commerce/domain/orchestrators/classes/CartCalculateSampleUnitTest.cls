@@ -3,11 +3,6 @@
  */
 @IsTest
 public class CartCalculateSampleUnitTest {
-    private static final String ACCOUNT_NAME = 'My Account';
-    private static final String WEBSTORE_NAME = 'My WebStore';
-    private static final String CART_NAME = 'My Cart';
-    private static final String DELIVERYGROUP_NAME = 'My Delivery Group';
-    private static final String CARTITEM_NAME = 'My Cart Item';
 
     @IsTest
     public static void shouldRunPricingAndPromotionsWhenBuyerAddsToCart() {

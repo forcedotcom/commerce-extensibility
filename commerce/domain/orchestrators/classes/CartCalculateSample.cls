@@ -89,8 +89,10 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
         while (iterator.hasNext()) {
             CartExtension.CartValidationOutput cvo = iterator.next();
+            Boolean cvoContainsCalculatorError = cvo.getType() == calculatorType
+                && cvo.getLevel() == CartExtension.CartValidationOutputLevelEnum.ERROR;
 
-            if (cvo.getType() == calculatorType && cvo.getLevel() == CartExtension.CartValidationOutputLevelEnum.ERROR) {
+            if (cvoContainsCalculatorError) {
                 return true;
             }
         }

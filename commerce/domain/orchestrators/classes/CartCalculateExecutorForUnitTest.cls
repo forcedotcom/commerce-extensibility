@@ -11,35 +11,53 @@ global class CartCalculateExecutorForUnitTest extends CartExtension.CartCalculat
     global override void prices(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
 
-        if (cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT) {
-            cart.setName(cart.getName() + ', CartRepricedWithExternalCallout');
-        } else {
-            cart.setName(cart.getName() + ', CartRepricedWithEstimate');
-        }
+        String nameToAppend = shouldCallExternalPricingService(cart)
+            ? ', CartRepricedWithExternalCallout'
+            : ', CartRepricedWithEstimate';
+
+        appendToCartName(cart, nameToAppend);
     }
 
     global override void promotions(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName(cart.getName() + ', PromotionsRecalculated');
+        appendToCartName(cart, ', PromotionsRecalculated');
     }
 
     global override void inventory(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName(cart.getName() + ', InventoryChecked');
+        appendToCartName(cart, ', InventoryChecked');
     }
 
     global override void shipping(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName(cart.getName() + ', ShippingRecalculated');
+        appendToCartName(cart, ', ShippingRecalculated');
     }
 
     global override void tax(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName(cart.getName() + ', TaxesRecalculated');
+        appendToCartName(cart, ', TaxesRecalculated');
     }
 
     global override void postShipping(CartExtension.CartCalculateCalculatorRequest request) {
         CartExtension.Cart cart = request.getCart();
-        cart.setName(cart.getName() + ', PostShippingCompleted');
+        appendToCartName(cart, ', PostShippingCompleted');
+    }
+
+    /**
+     * @description Checks whether or not to call the external Pricing Service
+     * @param CartExtension.Cart The Cart object
+     */
+    private Boolean shouldCallExternalPricingService(CartExtension.Cart cart) {
+        // We only need to call the external Pricing Service if the Cart is in Checkout
+        return cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT;
+    }
+
+    /**
+     * @description Appends to the Cart name
+     * @param CartExtension.Cart The cart object
+     * @param String The name to append to the cart
+     */
+    private void appendToCartName(CartExtension.Cart cart, String nameToAppend) {
+        cart.setName(cart.getName() + nameToAppend);
     }
 }
