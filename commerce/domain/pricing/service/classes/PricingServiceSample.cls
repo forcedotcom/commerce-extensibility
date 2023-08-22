@@ -25,15 +25,12 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       commercestorepricing.PricingRequestItem item = items.get(i);
       products.add(item.getProductId());
     }
-
+    Map<String, PriceDataFromExternalService> pricesFromExternalService;
     // Get prices from an external service
     if(useHTTPService){
-      Map<String, PriceDataFromExternalService> pricesFromExternalService = getPricesFromExternalService(
-        products
-      );
+      pricesFromExternalService = getPricesFromExternalService(products);
     }else{
-      Map<String, PriceDataFromExternalService> pricesFromExternalService = getPriceFromStaticResponse(products
-        );
+      pricesFromExternalService = getPriceFromStaticResponse(products);
     }
 
     // Create response using this data
@@ -149,10 +146,6 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
   }
 
   private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> skus) {
-        if (skus.isEmpty()) {
-            throw new ApplicationException('Input SKUs list is empty or undefined.');
-        }
-
         String responseJson = '{';
         for(String sku : skus) {
             Double price = 0.00;
@@ -225,7 +218,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       Map<String, Object> resultsFromExternalServiceBySKU = (Map<String, Object>) JSON.deserializeUntyped(
         response.getBody()
       );
-      return populatePrice(resultsFromExternalServiceBySKU);;
+      return populatePrice(resultsFromExternalServiceBySKU);
     } else {
       throw new CalloutException(
         'There was a problem with the request. Error: ' + response.getStatusCode()

@@ -58,7 +58,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             if(useHTTPService){
                 // Get shipping options, including aspects like rates and carriers, from the external service.
                 ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
-                  numberOfUniqueItems, cartValidationOutputCollection
+                  numberOfUniqueItems, cartValidationOutputList
                   );
 
                   // Create a CartDeliveryGroupMethod record for every shipping option returned from the external
@@ -67,7 +67,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                   populateCartDeliveryGroupMethodWithShippingOptions(
                     shippingOptionsAndRatesFromExternalService,
                     cartDeliveryGroupMethods,shippingProduct,
-                    cartValidationOutputCollection
+                    cartValidationOutputList
                   );
                 }
             } else {
@@ -84,11 +84,20 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
       }
   }
 
+   private static String generateRandomString(Integer len) {
+        final String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+        String randStr = '';
+        while (randStr.length() < len) {
+        Integer idx = Math.mod(Math.abs(Crypto.getRandomInteger()), chars.length());
+        randStr += chars.substring(idx, idx+1);
+        }
+        return randStr;
+    }
+
   // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For
   // real-world scenarios, expand the parameter list.
   private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService(
-    Integer numberOfUniqueItems, CartExtension.CartValidationOutputCollection cartValidationOutputCollection
-  ) {
+    Integer numberOfUniqueItems, CartExtension.CartValidationOutputList cartValidationOutputCollection) {
     final Integer SuccessfulHttpRequest = 200;
     ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
     Http http = new Http();
@@ -189,10 +198,10 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
 
 
   private void populateCartDeliveryGroupMethodWithShippingOptions(
-   List<ShippingOptionsAndRatesFromExternalService> shippingOptions,
-   CartExtension.CartDeliveryGroupMethodCollection cartDeliveryGroupMethodCollection,
+   List<ShippingCartCalculatorSample.ShippingOptionsAndRatesFromExternalService> shippingOptions,
+   CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethodCollection,
    String shippingProduct,
-   CartExtension.CartValidationOutputCollection cartValidationOutputCollection
+   CartExtension.CartValidationOutputList cartValidationOutputCollection
  ) {
      for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
          String carrier = shippingOption.serviceName;
