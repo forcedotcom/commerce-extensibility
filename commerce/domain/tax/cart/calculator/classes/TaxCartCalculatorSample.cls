@@ -6,7 +6,6 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     try {
       CartExtension.Cart cart = request.getCart();
-      System.debug('In Tax Calculator');
 
       // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
       // previous CVOs as they have been previously handled by the Cart Calculate API.
