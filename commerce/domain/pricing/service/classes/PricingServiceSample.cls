@@ -145,14 +145,13 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     return txnResponse;
   }
 
-  private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> skus) {
+  private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> productIds) {
         String responseJson = '{';
-        for(String sku : skus) {
-            Double price = 0.00;
-            if (sku == 'SKU_FOR_TEST') {
-                price = 100.00;
-            }
-            responseJson = responseJson + '"'+sku+'"';
+        for(String productID : productIds) {
+            Double price = 10.00;
+            Double listPrice = 10.00;
+            Double unitPrice = 10.00;
+            responseJson = responseJson + '"'+productID+'"';
             responseJson = responseJson + ':';
             responseJson = responseJson + '{';
             responseJson = responseJson + '"listPrice"';
