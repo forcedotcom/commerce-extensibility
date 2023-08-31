@@ -3,8 +3,13 @@
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
 // CartExtension.AbstractCartCalculator class.
 public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
-  private static String httpHost = 'https://example.com';
-  private static Boolean useHTTPService = false;
+
+// You MUST change this to be your service or you must launch your own Third Party Service
+// and add the host in Setup | Security | Remote site settings.
+  private static String externalTaxHost = 'https://example.com';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     try {
       CartExtension.Cart cart = request.getCart();
@@ -34,7 +39,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       // Get the tax rates and tax amounts from an external service for all given products and its
       // adjustments.
       Map<String, TaxDataFromExternalService> dataFromExternalService = null;
-      if(useHTTPService){
+      if(useExternalService){
          dataFromExternalService = getTaxesFromExternalService(
           cartItemById,
           CartDeliveryGroup.getDeliverToAddress().getState(),
@@ -198,7 +203,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
     String country,
     CartExtension.TaxLocaleTypeEnum taxType
   ) {
-    String requestURL = httpHost+'/get-tax-rates-with-adjustments-post';
+    String requestURL = externalTaxHost+'/get-tax-rates-with-adjustments-post';
     String requestBody =
       '{"state":"' +
       state +

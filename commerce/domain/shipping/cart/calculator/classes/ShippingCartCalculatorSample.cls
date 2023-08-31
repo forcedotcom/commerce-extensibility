@@ -7,8 +7,13 @@
 public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalculator {
   // You MUST change this to be your service or you must launch your own Third Party Service
   // and add the host in Setup | Security | Remote site settings.
-  private static String httpHost = 'https://example.com';
-  private static Boolean useHTTPService = false;
+  private static String externalShippingServiceHost = 'https://example.com';
+
+  // You MUST change this to be your service or your URL
+  private static String externalShippingURL = externalShippingServiceHost + '/calculate-shipping-rates';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
 
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     CartExtension.Cart cart = request.getCart();
@@ -55,7 +60,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
       } else {
           String shippingProduct = Id.valueOf(shippingProducts[0].Id);
           // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
-            if(useHTTPService){
+            if(useExternalService){
                 // Get shipping options, including aspects like rates and carriers, from the external service.
                 ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
                   numberOfUniqueItems, cartValidationOutputList
@@ -102,10 +107,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
     ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
     Http http = new Http();
     HttpRequest request = new HttpRequest();
-
-    request.setEndpoint(
-      httpHost+'/calculate-shipping-rates-winter-21'
-    );
+    request.setEndpoint(externalShippingURL);
     request.setMethod('GET');
     HttpResponse response = http.send(request);
 

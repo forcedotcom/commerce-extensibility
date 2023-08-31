@@ -9,8 +9,12 @@
 // This must implement the commercestorepricing.PricingService class in order to be processed by the
 // pricing flow.
 public class PricingServiceSample extends commercestorepricing.PricingService {
-  private static String httpHost = 'https://example.com';
-  private static Boolean useHTTPService = false;
+  // You MUST change this to be your service or you must launch your own Third Party Service
+  // and add the host in Setup | Security | Remote site settings.
+  private static String externalPricingServiceHost = 'https://example.com';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
   // Override processPrice method in order to change behavior of the pricing of single product
   //
   // Fields that can be overriden are: Header level - currency and error. Item level - unit or
@@ -27,7 +31,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     }
     Map<String, PriceDataFromExternalService> pricesFromExternalService;
     // Get prices from an external service
-    if(useHTTPService){
+    if(useExternalService){
       pricesFromExternalService = getPricesFromExternalService(products);
     }else{
       pricesFromExternalService = getPriceFromStaticResponse(products);
@@ -205,7 +209,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     // To access the service below, you may need to add endpoint =
     // httpHost in Setup > Security > Remote site settings.
     String requestURL =
-      httpHost+'/get-prices?skus=' +  JSON.serialize(encodedProductIDs);
+      externalPricingServiceHost+'/get-prices?skus=' +  JSON.serialize(encodedProductIDs);
     request.setEndpoint(requestURL);
     request.setMethod('GET');
     HttpResponse response = http.send(request);
