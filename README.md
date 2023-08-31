@@ -5,7 +5,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 - Pricing
 - Shipping Calculator
 - Tax Calculator
-- Tax Servuce
+- Tax Service
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
