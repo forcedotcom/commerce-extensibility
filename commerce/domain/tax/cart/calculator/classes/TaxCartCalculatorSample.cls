@@ -3,6 +3,13 @@
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
 // CartExtension.AbstractCartCalculator class.
 public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
+
+// You MUST change this to be your service or you must launch your own Third Party Service
+// and add the host in Setup | Security | Remote site settings.
+  private static String externalTaxHost = 'https://example.com';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     try {
       CartExtension.Cart cart = request.getCart();
@@ -10,7 +17,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
 
       // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
       // previous CVOs as they have been previously handled by the Cart Calculate API.
-      CartExtension.CartValidationOutputCollection cartValidationOutputCollection = cart.getCartValidationOutputs();
+      CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
       for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
         CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
         if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
@@ -19,11 +26,11 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       }
 
       // There should be one delivery group per cart.
-      CartExtension.CartDeliveryGroupCollection cartDeliveryGroups = cart.getCartDeliveryGroups();
+      CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
       CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
       // Map cart ID to cart item.
-      CartExtension.CartItemCollection cartItemCollection = cart.getCartItems();
+      CartExtension.CartItemList cartItemCollection = cart.getCartItems();
       Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
         cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
@@ -31,12 +38,22 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
 
       // Get the tax rates and tax amounts from an external service for all given products and its
       // adjustments.
-      Map<String, TaxDataFromExternalService> dataFromExternalService = getTaxesFromExternalService(
-        cartItemById,
-        CartDeliveryGroup.getDeliverToAddress().getState(),
-        CartDeliveryGroup.getDeliverToAddress().getCountry(),
-        cart.getTaxType()
-      );
+      Map<String, TaxDataFromExternalService> dataFromExternalService = null;
+      if(useExternalService){
+         dataFromExternalService = getTaxesFromExternalService(
+          cartItemById,
+          CartDeliveryGroup.getDeliverToAddress().getState(),
+          CartDeliveryGroup.getDeliverToAddress().getCountry(),
+          cart.getTaxType()
+        );
+      } else{
+         dataFromExternalService = getTaxesFromStaticResponse(
+          cartItemById,
+          CartDeliveryGroup.getDeliverToAddress().getState(),
+          CartDeliveryGroup.getDeliverToAddress().getCountry(),
+          cart.getTaxType()
+        );
+      }
 
       // If no tax details are returned for any cart item, add a cart validation output entry. If
       // any invalid scenario found then return.
@@ -76,7 +93,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
         ) {
           cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
           for (Integer i = (cartItem.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
-            CartExtension.CartTaxCollection cipaTaxes = cartItem.getCartItemPriceAdjustments()
+            CartExtension.CartTaxList cipaTaxes = cartItem.getCartItemPriceAdjustments()
               .get(i)
               .getCartTaxes();
             cipaTaxes.remove(cipaTaxes.get(0));
@@ -96,9 +113,9 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
           cartItem.setNetUnitPrice(taxDetailsToCartId.getNetUnitPrice());
           cartItem.setGrossUnitPrice(taxDetailsToCartId.getGrossUnitPrice());
           cartItem.setAdjustmentTaxAmount(taxDetailsToCartId.getAdjustmentTaxAmount());
-          CartExtension.CartTaxCollection cartTaxCollection = cartItem.getCartTaxes();
+          CartExtension.CartTaxList cartTaxCollection = cartItem.getCartTaxes();
           CartExtension.CartTax cartTax = new CartExtension.CartTax(
-            CartExtension.TaxTypesEnum.ESTIMATED,
+            CartExtension.TaxTypeEnum.ESTIMATED,
             taxDetailsToCartId.getAmount(),
             taxDetailsToCartId.getTaxName()
           );
@@ -113,7 +130,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
           )
             for (CartAdjustment cipaTax : taxDetailsToCartId.getItemizedPromotionTaxAmounts()) {
               CartExtension.CartTax promoTax = new CartExtension.CartTax(
-                CartExtension.TaxTypesEnum.ESTIMATED,
+                CartExtension.TaxTypeEnum.ESTIMATED,
                 cipaTax.getAmount(),
                 taxDetailsToCartId.getTaxName()
               );
@@ -149,7 +166,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       : taxesFromExternalService.getItemizedPromotionTaxAmounts();
 
     for (Integer i = (cartItemDto.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
-      CartExtension.CartTaxCollection cartTaxes = cartItemDto.getCartItemPriceAdjustments()
+      CartExtension.CartTaxList cartTaxes = cartItemDto.getCartItemPriceAdjustments()
         .get(i)
         .getCartTaxes();
       for (Integer j = (cartTaxes.size() - 1); j >= 0; j--) {
@@ -167,7 +184,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
 
   // Get cartItemAdjustment based on its ID.
   private CartExtension.cartItemPriceAdjustment getAdjustmentById(
-    CartExtension.cartItemPriceAdjustmentCollection cipaList,
+    CartExtension.cartItemPriceAdjustmentList cipaList,
     String id
   ) {
     for (Integer i = (cipaList.size() - 1); i >= 0; i--) {
@@ -184,9 +201,9 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
     Map<String, CartExtension.CartItem> cartItemById,
     String state,
     String country,
-    CartExtension.TaxLocaleType taxType
+    CartExtension.TaxLocaleTypeEnum taxType
   ) {
-    String requestURL = 'https://b2b-commerce-test.herokuapp.com/get-tax-rates-with-adjustments-post';
+    String requestURL = externalTaxHost+'/get-tax-rates-with-adjustments-post';
     String requestBody =
       '{"state":"' +
       state +
@@ -211,45 +228,131 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
       Map<String, Object> resultsFromExternalService = (Map<String, Object>) JSON.deserializeUntyped(
         response.getBody()
       );
-      Map<String, TaxDataFromExternalService> taxDetailsFromExternalService = new Map<String, TaxDataFromExternalService>();
-      for (String cartItemId : resultsFromExternalService.keySet()) {
-        Map<String, Object> rateAndAmountFromExternalService = (Map<String, Object>) resultsFromExternalService.get(
-          cartItemId
-        );
-        List<Object> cipaList = (List<Object>) rateAndAmountFromExternalService.get(
-          'itemizedPromotionTaxAmounts'
-        );
-        List<CartAdjustment> cipaObj = new List<CartAdjustment>();
-
-        for (Object cipa : cipaList) {
-          cipaObj.add(
-            new CartAdjustment(
-              (String) ((Map<String, Object>) cipa).get('id'),
-              (Decimal) ((Map<String, Object>) cipa).get('taxAmount')
-            )
-          );
-        }
-        taxDetailsFromExternalService.put(
-          cartItemId,
-          new TaxDataFromExternalService(
-            (Decimal) rateAndAmountFromExternalService.get('rate'),
-            (Decimal) rateAndAmountFromExternalService.get('amount'),
-            (String) rateAndAmountFromExternalService.get('taxName'),
-            (Decimal) rateAndAmountFromExternalService.get('adjustmentTaxAmount'),
-            (Decimal) rateAndAmountFromExternalService.get('totalItemizedPromotionTaxAmount'),
-            cipaObj,
-            (Decimal) rateAndAmountFromExternalService.get('grossUnitPrice'),
-            (Decimal) rateAndAmountFromExternalService.get('netUnitPrice')
-          )
-        );
-      }
-      return taxDetailsFromExternalService;
+      return populateTax(resultsFromExternalService);
     } else {
       throw new CalloutException(
         'There was a problem with the request. Error: ' + response.getStatusCode()
       );
     }
   }
+
+  private Map<String, TaxDataFromExternalService> populateTax(Map<String, Object> resultsFromExternalService){
+    Map<String, TaxDataFromExternalService> taxDetailsFromExternalService = new Map<String, TaxDataFromExternalService>();
+    for (String cartItemId : resultsFromExternalService.keySet()) {
+      Map<String, Object> rateAndAmountFromExternalService = (Map<String, Object>) resultsFromExternalService.get(
+        cartItemId
+      );
+      List<Object> cipaList = (List<Object>) rateAndAmountFromExternalService.get(
+        'itemizedPromotionTaxAmounts'
+      );
+      List<CartAdjustment> cipaObj = new List<CartAdjustment>();
+
+      for (Object cipa : cipaList) {
+        cipaObj.add(
+          new CartAdjustment(
+            (String) ((Map<String, Object>) cipa).get('id'),
+            (Decimal) ((Map<String, Object>) cipa).get('taxAmount')
+          )
+        );
+      }
+      taxDetailsFromExternalService.put(
+        cartItemId,
+        new TaxDataFromExternalService(
+          (Decimal) rateAndAmountFromExternalService.get('rate'),
+          (Decimal) rateAndAmountFromExternalService.get('amount'),
+          (String) rateAndAmountFromExternalService.get('taxName'),
+          (Decimal) rateAndAmountFromExternalService.get('adjustmentTaxAmount'),
+          (Decimal) rateAndAmountFromExternalService.get('totalItemizedPromotionTaxAmount'),
+          cipaObj,
+          (Decimal) rateAndAmountFromExternalService.get('grossUnitPrice'),
+          (Decimal) rateAndAmountFromExternalService.get('netUnitPrice')
+        )
+      );
+    }
+    return taxDetailsFromExternalService;
+
+  }
+
+  private Map<String, TaxDataFromExternalService> getTaxesFromStaticResponse(Map<String, CartExtension.CartItem> cartItemsMap, String state, String country, CartExtension.TaxLocaleTypeEnum taxType) {
+
+        Double taxRate = 0.15;
+        String responseJson = '{';
+        for (String key : cartItemsMap.keySet()) {
+            CartExtension.CartItem cartItem = cartItemsMap.get(key);
+            ID cartItemId = cartItem.getId();
+
+            Double amount = cartItem.getTotalAmount()==null ? 0.00 : cartItem.getTotalAmount();
+            Double tierAdjustment = cartItem.getAdjustmentAmount()==null ? 0.00 : cartItem.getAdjustmentAmount();
+            Double quantity = cartItem.getQuantity()==null ? 0.00 : cartItem.getQuantity();
+
+            if(country == 'US') {
+                taxRate = 0.08;
+                String [] noSalesTaxUSStates = new String [] {'AK', 'DE', 'MT', 'NH', 'OR'};
+                if (noSalesTaxUSStates.contains(state)) {
+                    taxRate = 0.00;
+                }
+            }
+
+            Double itemizedPromotionTax = 0.00;
+            Double [] itemizedPromotionTaxArr = new Double [] {};
+            Double netUnitPrice = 0.00;
+            Double grossUnitPrice = 0.00;
+
+            Double multiplier = 0.00;
+
+            if(taxType == CartExtension.TaxLocaleTypeEnum.GROSS ) {
+                multiplier = taxRate / (1 + taxRate);
+            } else {
+                multiplier = taxRate;
+            }
+
+            Double cartItemTax = amount * multiplier;
+            Double tierAdjustmentTax = (tierAdjustment!=null ? tierAdjustment : 0.00) * multiplier;
+
+            CartExtension.CartItemPriceAdjustmentList itemizedPromotions = cartItem.getCartItemPriceAdjustments();
+
+            String itemizedPromotionTaxResp = '[';
+            for(Integer i=0; i<itemizedPromotions.size(); i++ ) {
+                CartExtension.CartItemPriceAdjustment itemAdj = itemizedPromotions.get(i);
+                Double itemTaxAmount = (itemAdj.getTotalAmount()!=null ? itemAdj.getTotalAmount() : 0.00) * multiplier;
+                itemizedPromotionTaxResp = itemizedPromotionTaxResp + '{';
+                itemizedPromotionTaxResp = itemizedPromotionTaxResp + '"id": "' + itemAdj.getId() + '",';
+                itemizedPromotionTaxResp = itemizedPromotionTaxResp + '"taxAmount": ' + itemTaxAmount;
+                itemizedPromotionTaxResp = itemizedPromotionTaxResp + '},';
+                itemizedPromotionTax = itemizedPromotionTax + itemTaxAmount;
+            }
+            itemizedPromotionTaxResp = itemizedPromotionTaxResp.removeEnd(',') + ']';
+
+            if(taxType == CartExtension.TaxLocaleTypeEnum.GROSS) {
+                grossUnitPrice = amount / quantity;
+                netUnitPrice = (amount - cartItemTax) / quantity;
+            } else {
+                grossUnitPrice = (amount + cartItemTax) / quantity;
+                netUnitPrice = amount / quantity;
+            }
+
+            responseJson = responseJson + '"'+cartItemId+'":';
+            responseJson = responseJson + '{';
+            responseJson = responseJson + '"cartItemId": "' + cartItemId + '",';
+            responseJson = responseJson + '"amount": ' + cartItemTax + ',';
+            responseJson = responseJson + '"adjustmentTaxAmount": ' + tierAdjustmentTax + ',';
+
+            responseJson = responseJson + '"itemizedPromotionTaxAmounts": ';
+            responseJson = responseJson + itemizedPromotionTaxResp;
+            responseJson = responseJson + ',';
+
+            responseJson = responseJson + '"totalItemizedPromotionTaxAmount": ' + itemizedPromotionTax + ',';
+            responseJson = responseJson + '"grossUnitPrice": ' + grossUnitPrice + ',';
+            responseJson = responseJson + '"netUnitPrice": ' + netUnitPrice + ',';
+            responseJson = responseJson + '"rate": ' + taxRate + ',';
+            responseJson = responseJson + '"taxName": "GST"';
+            responseJson = responseJson + '},';
+        }
+
+        responseJson = responseJson.removeEnd(',') + '}';
+        Map<String, Object> resultsFromStaticResponse =  (Map<String, Object>) JSON.deserializeUntyped(responseJson);
+        return populateTax(resultsFromStaticResponse);
+    }
 
   // Structure to store the tax data retrieved from external service. This class simplifies our
   // ability to access the data when storing it in Salesforce's CartTaxDto.
