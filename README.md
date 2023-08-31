@@ -5,6 +5,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 - Pricing
 - Shipping Calculator
 - Tax Calculator
+- Tax Servuce
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
@@ -23,6 +24,10 @@ The sample code for Shipping Calculator includes an Apex class (in `ShippingCalc
 ## Tax Calculator
 
 The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSample.apxc`) that calls an external service to retrieve tax information and then save those taxes in `CartTaxes` in `CartItems` and `CartItemAdjustments`.
+
+## Tax Service
+
+The sample code for Tax Service includes an Apex class (in `TaxServiceSample.apxc`) that calls an external service to retrieve tax calculation data and then saves that in the `CalculateTaxesResponseLineItem` list.
 
 ## Error Handling
 
