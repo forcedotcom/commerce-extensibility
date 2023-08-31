@@ -329,7 +329,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
             responseJson = responseJson + '"'+cartItemId+'":';
             responseJson = responseJson + '{';
             responseJson = responseJson + '"cartItemId": "' + cartItemId + '",';
-            responseJson = responseJson + '"taxAmount": ' + cartItemTax + ',';
+            responseJson = responseJson + '"amount": ' + cartItemTax + ',';
             responseJson = responseJson + '"adjustmentTaxAmount": ' + tierAdjustmentTax + ',';
 
             responseJson = responseJson + '"itemizedPromotionTaxAmounts": ';
@@ -339,7 +339,7 @@ public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculato
             responseJson = responseJson + '"totalItemizedPromotionTaxAmount": ' + itemizedPromotionTax + ',';
             responseJson = responseJson + '"grossUnitPrice": ' + grossUnitPrice + ',';
             responseJson = responseJson + '"netUnitPrice": ' + netUnitPrice + ',';
-            responseJson = responseJson + '"taxRate": ' + taxRate + ',';
+            responseJson = responseJson + '"rate": ' + taxRate + ',';
             responseJson = responseJson + '"taxName": "GST"';
             responseJson = responseJson + '},';
         }
