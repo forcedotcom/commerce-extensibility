@@ -2,11 +2,10 @@
 // information for a cart item and its adjustments and saves it to a cart data transfer object
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
 // CartExtension.AbstractCartCalculator class.
-public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
+public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
   public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
     try {
       CartExtension.Cart cart = request.getCart();
-      System.debug('In Tax Calculator');
 
       // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
       // previous CVOs as they have been previously handled by the Cart Calculate API.
