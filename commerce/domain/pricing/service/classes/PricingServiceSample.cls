@@ -13,6 +13,14 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
   //
   // Fields that can be overriden are: Header level - currency and error. Item level - unit or
   // negotiated price, list price, pricebook entry Id, product Id and product selling model Id.
+
+  // You MUST change this to be your service or you must launch your own Third Party Service
+  // and add the host in Setup | Security | Remote site settings.
+  private static String externalPricingServiceHost = 'https://example.com';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
+
   public override commercestorepricing.PricingResponse processPrice(
     commercestorepricing.PricingRequest request
   ) {
@@ -24,10 +32,13 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       products.add(item.getProductId());
     }
 
+    Map<String, PriceDataFromExternalService> pricesFromExternalService;
     // Get prices from an external service
-    Map<String, PriceDataFromExternalService> pricesFromExternalService = getPricesFromExternalService(
-      products
-    );
+    if(useExternalService){
+      pricesFromExternalService = getPricesFromExternalService(products);
+    }else{
+      pricesFromExternalService = getPriceFromStaticResponse(products);
+    }
 
     // Create response using this data
     commercestorepricing.PricingResponse response = new commercestorepricing.PricingResponse('USD');
@@ -159,8 +170,8 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     // To access the service below, you may need to add endpoint =
     // https://b2b-commerce-test.herokuapp.com in Setup > Security > Remote site settings.
     String requestURL =
-      'https://b2b-commerce-test.herokuapp.com/get-prices?skus=' +
-      JSON.serialize(encodedProductIDs);
+      externalPricingServiceHost+'/get-prices?skus=' +  JSON.serialize(encodedProductIDs);
+
     request.setEndpoint(requestURL);
     request.setMethod('GET');
     HttpResponse response = http.send(request);
@@ -192,6 +203,46 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       );
     }
   }
+
+  private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> productIds) {
+        String responseJson = '{';
+        for(String productID : productIds) {
+            Double listPrice = 10.00;
+            Double unitPrice = 10.00;
+            responseJson = responseJson + '"'+productID+'"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + '{';
+            responseJson = responseJson + '"listPrice"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + listPrice;
+            responseJson = responseJson + ',';
+            responseJson = responseJson + '"unitPrice"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + unitPrice;
+            responseJson = responseJson + '}';
+            responseJson = responseJson + ',';
+        }
+        responseJson = responseJson.removeEnd(',') + '}';
+        Map<String, Object> resultsFromExternalServiceBySKU =  (Map<String, Object>) JSON.deserializeUntyped(responseJson);
+        return populatePrice(resultsFromExternalServiceBySKU);
+    }
+
+    private Map<String, PriceDataFromExternalService> populatePrice(Map<String, Object> resultsFromExternalServiceBySKU){
+      Map<String, PriceDataFromExternalService> priceDataFromExternalServiceBySKU = new Map<String, PriceDataFromExternalService>();
+      for (String sku : resultsFromExternalServiceBySKU.keySet()) {
+        Map<String, Object> pricesFromExternalService = (Map<String, Object>) resultsFromExternalServiceBySKU.get(
+          sku
+        );
+        priceDataFromExternalServiceBySKU.put(
+          sku,
+          new PriceDataFromExternalService(
+            (Decimal) pricesFromExternalService.get('listPrice'),
+            (Decimal) pricesFromExternalService.get('unitPrice')
+          )
+        );
+      }
+      return priceDataFromExternalServiceBySKU;
+    }
 
   private Map<String, String> getMappedCurrencies() {
     Map<String, String> mappedCurrencies = new Map<String, String>();
