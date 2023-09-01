@@ -14,7 +14,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
         // Act
         Test.startTest();
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart);
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
@@ -34,7 +34,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
         // Act
         Test.startTest();
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart);
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         ShippingCartCalculatorSample calculator = new ShippingCartCalculatorSample();
         calculator.calculate(request);
         Test.stopTest();
