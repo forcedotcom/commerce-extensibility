@@ -2,7 +2,7 @@
 // information for a cart item and its adjustments and saves it to a cart data transfer object
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
 // CartExtension.AbstractCartCalculator class.
-public class TaxCartCalculatorSample extends CartExtension.AbstractCartCalculator {
+public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
 // You MUST change this to be your service or you must launch your own Third Party Service
 // and add the host in Setup | Security | Remote site settings.
