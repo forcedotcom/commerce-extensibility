@@ -9,6 +9,12 @@
 // This must implement the commercestorepricing.PricingService class in order to be processed by the
 // pricing flow.
 public class PricingServiceSample extends commercestorepricing.PricingService {
+  // You MUST change this to be your service or you must launch your own Third Party Service
+  // and add the host in Setup | Security | Remote site settings.
+  private static String externalPricingServiceHost = 'https://example.com';
+
+  // You MUST change the useExternalService to True if you want to use the Third Party Service.
+  private static Boolean useExternalService = false;
   // Override processPrice method in order to change behavior of the pricing of single product
   //
   // Fields that can be overriden are: Header level - currency and error. Item level - unit or
@@ -23,11 +29,13 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       commercestorepricing.PricingRequestItem item = items.get(i);
       products.add(item.getProductId());
     }
-
+    Map<String, PriceDataFromExternalService> pricesFromExternalService;
     // Get prices from an external service
-    Map<String, PriceDataFromExternalService> pricesFromExternalService = getPricesFromExternalService(
-      products
-    );
+    if(useExternalService){
+      pricesFromExternalService = getPricesFromExternalService(products);
+    }else{
+      pricesFromExternalService = getPriceFromStaticResponse(products);
+    }
 
     // Create response using this data
     commercestorepricing.PricingResponse response = new commercestorepricing.PricingResponse('USD');
@@ -141,6 +149,48 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     return txnResponse;
   }
 
+  private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> productIds) {
+        String responseJson = '{';
+        for(String productID : productIds) {
+            Double price = 10.00;
+            Double listPrice = 10.00;
+            Double unitPrice = 10.00;
+            responseJson = responseJson + '"'+productID+'"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + '{';
+            responseJson = responseJson + '"listPrice"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + price;
+            responseJson = responseJson + ',';
+            responseJson = responseJson + '"unitPrice"';
+            responseJson = responseJson + ':';
+            responseJson = responseJson + price;
+            responseJson = responseJson + '}';
+            responseJson = responseJson + ',';
+        }
+        responseJson = responseJson.removeEnd(',') + '}';
+        Map<String, Object> resultsFromExternalServiceBySKU =  (Map<String, Object>) JSON.deserializeUntyped(responseJson);
+        return populatePrice(resultsFromExternalServiceBySKU);
+    }
+
+    private Map<String, PriceDataFromExternalService> populatePrice(Map<String, Object> resultsFromExternalServiceBySKU){
+      Map<String, PriceDataFromExternalService> priceDataFromExternalServiceBySKU = new Map<String, PriceDataFromExternalService>();
+      for (String sku : resultsFromExternalServiceBySKU.keySet()) {
+        Map<String, Object> pricesFromExternalService = (Map<String, Object>) resultsFromExternalServiceBySKU.get(
+          sku
+        );
+        priceDataFromExternalServiceBySKU.put(
+          sku,
+          new PriceDataFromExternalService(
+            (Decimal) pricesFromExternalService.get('listPrice'),
+            (Decimal) pricesFromExternalService.get('unitPrice')
+          )
+        );
+      }
+      return priceDataFromExternalServiceBySKU;
+    }
+
+
   // This is simply a mocking of an external service call. Customers will have to change this logic to
   // call their respective services.
   private Map<String, PriceDataFromExternalService> getPricesFromExternalService(
@@ -157,10 +207,9 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     }
 
     // To access the service below, you may need to add endpoint =
-    // https://b2b-commerce-test.herokuapp.com in Setup > Security > Remote site settings.
+    // httpHost in Setup > Security > Remote site settings.
     String requestURL =
-      'https://b2b-commerce-test.herokuapp.com/get-prices?skus=' +
-      JSON.serialize(encodedProductIDs);
+      externalPricingServiceHost+'/get-prices?skus=' +  JSON.serialize(encodedProductIDs);
     request.setEndpoint(requestURL);
     request.setMethod('GET');
     HttpResponse response = http.send(request);
@@ -172,20 +221,7 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       Map<String, Object> resultsFromExternalServiceBySKU = (Map<String, Object>) JSON.deserializeUntyped(
         response.getBody()
       );
-      Map<String, PriceDataFromExternalService> priceDataFromExternalServiceBySKU = new Map<String, PriceDataFromExternalService>();
-      for (String sku : resultsFromExternalServiceBySKU.keySet()) {
-        Map<String, Object> pricesFromExternalService = (Map<String, Object>) resultsFromExternalServiceBySKU.get(
-          sku
-        );
-        priceDataFromExternalServiceBySKU.put(
-          sku,
-          new PriceDataFromExternalService(
-            (Decimal) pricesFromExternalService.get('listPrice'),
-            (Decimal) pricesFromExternalService.get('unitPrice')
-          )
-        );
-      }
-      return priceDataFromExternalServiceBySKU;
+      return populatePrice(resultsFromExternalServiceBySKU);
     } else {
       throw new CalloutException(
         'There was a problem with the request. Error: ' + response.getStatusCode()
