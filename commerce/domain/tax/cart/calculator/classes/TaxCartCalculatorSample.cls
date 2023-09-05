@@ -1,7 +1,7 @@
 // This tax calculator extension class makes a call to an external service to retrieve tax
 // information for a cart item and its adjustments and saves it to a cart data transfer object
 // (DTO). For a tax calcular extension to be processed by the checkout flow, you must implement the
-// CartExtension.AbstractCartCalculator class.
+// CartExtension.TaxCartCalculator class.
 public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
 // You MUST change this to be your service or you must launch your own Third Party Service
@@ -34,6 +34,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
         cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
       }
+      cartItemById.remove(null);
 
       // Get the tax rates and tax amounts from an external service for all given products and its
       // adjustments.
