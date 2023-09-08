@@ -33,7 +33,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
         cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
       }
-      cartItemById.remove(null);
 
       // Get the tax rates and tax amounts from an external service for all given products and its
       // adjustments.
