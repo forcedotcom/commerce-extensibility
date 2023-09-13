@@ -2,6 +2,8 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>TaxServiceSample</members>
+        <members>TaxServiceExtensionResolverSample</members>
+        <members>TaxServiceExtensionSampleForCanada</members>
         <name>ApexClass</name>
     </types>
     <version>59.0</version>
