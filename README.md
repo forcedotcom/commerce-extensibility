@@ -27,7 +27,9 @@ The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSamp
 
 ## Tax Service
 
-The sample code for Tax Service includes an Apex class (in `TaxServiceSample.apxc`) that calls an external service to retrieve tax calculation data and then saves that in the `CalculateTaxesResponseLineItem` list.
+The sample code for Tax Service includes the following Apex classes :
+- an Apex class (in `TaxServiceSample.apxc`) that calls an external service to retrieve tax calculation data and then saves that in the `CalculateTaxesResponseLineItem` list.
+- an Apex class (in `TaxServiceExtensionResolverSample.apxc`) which selects different resolution states (EXECUTE_DEFAULT, EXECUTE_REGISTERED and OFF) for different locales to execute respective apis (Extension Providers or the Default Salesforce Internal Tax Api).
 
 ## Error Handling
 
