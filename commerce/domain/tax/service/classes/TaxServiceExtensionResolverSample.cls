@@ -5,6 +5,10 @@
 // 3. ResolutionState - OFF (In this case, the default Salesforce Internal Tax Api will return an empty response).
 // For Salesforce Internal Tax calculation, please see the corresponding documentation.
 
+// An Extension Provider is a custom apex class which extends or overrides the default Salesforce Internal Tax Api.
+// An Extension Resolver is a custom apex class which selects different resolution states (EXECUTE_DEFAULT, EXECUTE_REGISTERED and OFF) for different locales 
+// to execute respective apis (Extension Providers or the Default Salesforce Internal Tax Api).
+
 // Your custom apex extension providers and the resolver must be linked to the tax extension point and then the resolver must be linked to the web store via appropriate setup.
 // You can have as many Extension Providers registered as per your use case and use them in your resolver for different locales.
 // Please follow the corresponding salesforce documentation on how to use locales.
@@ -14,19 +18,19 @@
 // and it must implement the CommerceExtension.ResolutionStrategy in order to get the different locales and resolutions.
 public class TaxServiceExtensionResolverSample extends commercestoretax.TaxService implements CommerceExtension.ResolutionStrategy {
     public CommerceExtension.Resolution resolve() {
-        // Executing the Sample Extension Provider registered as 'tax_extension_provider_for_us' for en_US locale
+        // The Sample Extension Provider registered with developer name as 'tax_extension_provider_for_us' will be used for execution for en_US locale
         if(CommerceExtension.ExtensionInfo.getLocaleString() == 'en_US') {
             return new CommerceExtension.Resolution('tax_extension_provider_for_us');
         }
-        // Executing the Sample Extension Provider registered as 'tax_extension_provider_for_canada' for en_CA locale
+        // The Sample Extension Provider registered with developer name as 'tax_extension_provider_for_canada' will be used for execution for en_CA locale
         if(CommerceExtension.ExtensionInfo.getLocaleString() == 'en_CA') {
             return new CommerceExtension.Resolution('tax_extension_provider_for_canada');
         }
-        // Executing the OFF case for German locale (i.e. No taxation)
+        // The default Salesforce Internal Tax Api will return an empty response for German locale
         if(CommerceExtension.ExtensionInfo.getLocaleString() == 'de') {
             return new CommerceExtension.Resolution(CommerceExtension.ResolutionStates.OFF);
         }
-        // Executing the default Salesforce Internal Tax Api for other locales than US, Canada and Germany
+        // The default Salesforce Internal Tax Api will be used for execution for all other locales than US, Canada and Germany
         return new CommerceExtension.Resolution();
     }
 }
