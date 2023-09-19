@@ -32,9 +32,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       CartExtension.CartItemList cartItemCollection = cart.getCartItems();
       Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
-        cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
+        if (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
+          cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
+        }
       }
-      cartItemById.remove(null);
 
       // Get the tax rates and tax amounts from an external service for all given products and its
       // adjustments.
