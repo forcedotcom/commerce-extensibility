@@ -27,11 +27,14 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
       CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
-      // Map cart ID to cart item.
+      // Map cart ID to cart item with type Product.
       CartExtension.CartItemList cartItemCollection = cart.getCartItems();
       Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
         cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
+        if (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
+          cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
+        }
       }
 
       // Get the tax rates and tax amounts from an external service for all given products and its
