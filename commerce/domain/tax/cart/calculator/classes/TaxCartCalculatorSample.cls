@@ -30,8 +30,14 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
       // Map cart ID to cart item with type Product.
       CartExtension.CartItemList cartItemCollection = cart.getCartItems();
+
+      // The cartItemCollection contains both products and shipping cart items. Here we are only calculating taxes for product cart items.
+      // If you have the requirement of calculating taxes on shipping as well, then to include shipping cart item for tax calculation,  
+      // you can remove this condition -> (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.PRODUCT),
+      // as shipping charges are of type SalesItemTypeEnum = CHARGE in the cartItemCollection.
       Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
       for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
+        cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
         if (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
           cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
         }
