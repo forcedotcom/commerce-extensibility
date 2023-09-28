@@ -34,12 +34,11 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
-        CartExtension.CartValidationOutputList cvoList = cart.getCartValidationOutputs();
 
         if (runPricing) {
             prices(calculatorRequest);
 
-            if (hasErrorLevelCartValidationOutput(cvoList, CartExtension.CartValidationOutputTypeEnum.PRICING)) {
+            if (hasErrorLevelCartValidationOutput(cart.getCartValidationOutputs(), CartExtension.CartValidationOutputTypeEnum.PRICING)) {
                 return;
             }
         }
@@ -47,7 +46,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runPromotions) {
             promotions(calculatorRequest);
 
-            if (hasErrorLevelCartValidationOutput(cvoList, CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {
+            if (hasErrorLevelCartValidationOutput(cart.getCartValidationOutputs(), CartExtension.CartValidationOutputTypeEnum.PROMOTIONS)) {
                 return;
             }
         }
@@ -55,7 +54,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runInventory) {
             inventory(calculatorRequest);
 
-            if (hasErrorLevelCartValidationOutput(cvoList, CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {
+            if (hasErrorLevelCartValidationOutput(cart.getCartValidationOutputs(), CartExtension.CartValidationOutputTypeEnum.INVENTORY)) {
                 return;
             }
         }
@@ -63,7 +62,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runShipping) {
             shipping(calculatorRequest);
 
-            if (hasErrorLevelCartValidationOutput(cvoList, CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
+            if (hasErrorLevelCartValidationOutput(cart.getCartValidationOutputs(), CartExtension.CartValidationOutputTypeEnum.SHIPPING)) {
                 return;
             }
         }
@@ -71,7 +70,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         if (runPostShipping) {
             postShipping(calculatorRequest);
 
-            if (hasErrorLevelCartValidationOutput(cvoList, CartExtension.CartValidationOutputTypeEnum.SYSTEM_ERROR)) {
+            if (hasErrorLevelCartValidationOutput(cart.getCartValidationOutputs(), CartExtension.CartValidationOutputTypeEnum.SYSTEM_ERROR)) {
                 return;
             }
         }
