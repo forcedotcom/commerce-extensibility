@@ -1,8 +1,8 @@
 /**
- * @description A Sample unit test for CartCalculateSample.
+ * @description A Sample unit test for ShippingAndTaxesForCartOrchestrator.
  */
 @IsTest
-global class CartCalculateSampleUnitTest {
+global class ShippingAndTaxesForCartOrchestratorTest {
 
     private static final String CART_REPRICED = 'CartRepriced';
     private static final String PROMOTIONS_RECALCULATED = 'PromotionsRecalculated';
@@ -12,10 +12,10 @@ global class CartCalculateSampleUnitTest {
     private static final String POST_SHIPPING_COMPLETED = 'PostShippingCompleted';
 
     static CartCalculateExecutorForUnitTest executor = new CartCalculateExecutorForUnitTest();
-    static CartCalculateSample cartCalculateSample = new CartCalculateSample(executor);
+    static ShippingAndTaxesForCartOrchestrator cartCalculateSample = new ShippingAndTaxesForCartOrchestrator(executor);
 
     @IsTest
-    public static void shouldRunPricingAndPromotionsWhenBuyerAddsToCart() {
+    public static void shouldRunPricingPromotionsShippingAndTaxesWhenBuyerAddsToCart() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -29,16 +29,17 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunPricingAndPromotionsWhenBuyerRemovesItemToCart() {
+    public static void shouldRunPricingPromotionsShippingAndTaxesWhenBuyerRemovesItemToCart() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
-        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has added an item to cart
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has removed an item from cart
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForDeleteFromCart(cart);
         CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForDeleteFromCart();
         CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
@@ -48,12 +49,13 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunPricingAndPromotionsWhenBuyerIncreasesQuantityOfItem() {
+    public static void shouldRunPricingPromotionsShippingAndTaxesWhenBuyerIncreasesQuantityOfItem() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -67,12 +69,13 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunPricingAndPromotionsWhenBuyerDecreasesQuantityOfItem() {
+    public static void shouldRunPricingPromotionsShippingAndTaxesWhenBuyerDecreasesQuantityOfItem() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -86,12 +89,13 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunPromotionsWhenBuyerAddsCoupon() {
+    public static void shouldRunPromotionsAndTaxesWhenBuyerAddsCoupon() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -105,12 +109,12 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED, SHIPPING_RECALCULATED});
     }
 
     @IsTest
-    public static void shouldRunPromotionsWhenBuyerRemovesCoupon() {
+    public static void shouldRunPromotionsAndTaxesWhenBuyerRemovesCoupon() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -124,8 +128,8 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED, SHIPPING_RECALCULATED});
     }
 
     @IsTest
@@ -144,7 +148,7 @@ global class CartCalculateSampleUnitTest {
         // Assert
         assertNoCartValidationOutputs(cart);
         assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED});
-        assertUnexpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertUnexpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED});
     }
 
     @IsTest
@@ -162,11 +166,12 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunShippingTaxesAndPostShippingWhenBuyerUpdatesShippingAddress() {
+    public static void shouldRunShippingTaxesWhenBuyerUpdatesShippingAddress() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -180,12 +185,13 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED});
         assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED});
+        assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(cart);
     }
 
     @IsTest
-    public static void shouldRunPostShippingAndTaxesWhenBuyerSelectsDeliveryMethod() {
+    public static void shouldCalculateTaxesWhenBuyerSelectsDeliveryMethod() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
@@ -199,8 +205,32 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertExpectedCalculations(cart, new List<String>{TAXES_RECALCULATED});
         assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED});
+    }
+
+    @IsTest
+    public static void shouldClearDeliveryMethodWhenNoShippingOptions() {
+        // Arrange
+        CartExtension.Cart cart = arrangeCartWithShippingOptionsAndShippingCharge();
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has removed an item from cart
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForDeleteFromCart(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForDeleteFromCart();
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+        //Test.startTest();
+        //cartCalculateSample.calculate(request);
+        //Test.stopTest();
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED});
+
     }
 
     private static CartExtension.Cart arrangeCart() {
@@ -216,8 +246,51 @@ global class CartCalculateSampleUnitTest {
         CartDeliveryGroup testDeliveryGroup = new CartDeliveryGroup(Name='My Delivery Group', CartId=testCart.Id);
         insert testDeliveryGroup;
 
-        CartItem testCartItem = new CartItem(Name='My Cart Item', CartId=testCart.Id, CartDeliveryGroupId=testDeliveryGroup.Id);
+        Product2 testProduct = new Product2(name='My Product');
+        insert(testProduct);
+
+        CartItem testCartItem = new CartItem(Name='My Cart Item', CartId=testCart.Id, CartDeliveryGroupId=testDeliveryGroup.Id,
+                                                Product2Id=testProduct.Id, Type='PRODUCT');
         insert testCartItem;
+
+        WebCartAdjustmentBasis testCartAdjustmentBasis = new WebCartAdjustmentBasis(Name='My Coupon', WebCartId=testCart.Id);
+        insert testCartAdjustmentBasis;
+
+        return CartExtension.CartTestUtil.getCart(testCart.Id);
+    }
+
+    private static CartExtension.Cart arrangeCartWithShippingOptionsAndShippingCharge() {
+        Account testAccount = new Account(Name='My Account');
+        insert testAccount;
+
+        WebStore testWebStore = new WebStore(Name='My WebStore');
+        insert testWebStore;
+
+        WebCart testCart = new WebCart(Name='My Cart', WebStoreId=testWebStore.Id, AccountId=testAccount.Id);
+        insert testCart;
+
+        CartDeliveryGroup testDeliveryGroup = new CartDeliveryGroup(Name='My Delivery Group', CartId=testCart.Id);
+        insert testDeliveryGroup;
+
+        Product2 testProduct = new Product2(name='My Product');
+        insert(testProduct);
+
+        CartDeliveryGroupMethod cartDeliveryGroupMethod1 = new CartDeliveryGroupMethod(Name='My Delivery Group Method 1',
+                                    WebCartId=testCart.Id, ShippingFee=10.99, CartDeliveryGroupId=testDeliveryGroup.Id,
+                                    ProductId=testProduct.Id);
+        insert cartDeliveryGroupMethod1;
+
+        CartDeliveryGroupMethod cartDeliveryGroupMethod2 = new CartDeliveryGroupMethod(Name='My Delivery Group Method 2',
+                                    WebCartId=testCart.Id, ShippingFee=15.99, CartDeliveryGroupId=testDeliveryGroup.Id,
+                                    ProductId=testProduct.Id);
+        insert cartDeliveryGroupMethod2;
+
+        testDeliveryGroup.SelectedDeliveryMethodId = cartDeliveryGroupMethod1.Id;
+        update testDeliveryGroup;
+
+        CartItem testShippingCharge = new CartItem(Name='My Shipping Charge', CartId=testCart.Id, CartDeliveryGroupId=testDeliveryGroup.Id,
+                                                        Product2Id=testProduct.Id, Type='CHARGE', TotalPrice=10.99);
+        insert testShippingCharge;
 
         WebCartAdjustmentBasis testCartAdjustmentBasis = new WebCartAdjustmentBasis(Name='My Coupon', WebCartId=testCart.Id);
         insert testCartAdjustmentBasis;
@@ -248,8 +321,26 @@ global class CartCalculateSampleUnitTest {
         }
     }
 
+    public static void assertCheapestDeliveryMethodSelectedAndShippingChargeCreated(CartExtension.Cart cart) {
+        CartExtension.CartDeliveryGroupMethod selectedDeliveryMethod = cart.getCartDeliveryGroups().get(0).getSelectedCartDeliveryGroupMethod();
+        Assert.areEqual(10.99, selectedDeliveryMethod.getShippingFee());
+        Assert.areEqual('Ground Shipping', selectedDeliveryMethod.getName());
+        Iterator<CartExtension.CartItem> cartItemIterator = cart.getCartItems().iterator();
+        Integer numberOfCharges = 0;
+        CartExtension.CartItem shippingCharge = Null;
+        while (cartItemIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemIterator.next();
+            if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
+                numberOfCharges += 1;
+                shippingCharge = cartItem;
+            }
+        }
+        Assert.areEqual(1, numberOfCharges);
+        Assert.areEqual(10.99, shippingCharge.getTotalPrice());
+    }
+
     /**
-     * @description Mocks invocations of prices(), promotions(), inventory(), shipping(), taxes(), postShipping() from CartCalculate
+     * @description Sample mock executor for unit testing a custom orchestrator within Cart Calculate API.
      */
     global class CartCalculateExecutorForUnitTest extends CartExtension.CartCalculateExecutorMock {
 
@@ -276,6 +367,22 @@ global class CartCalculateSampleUnitTest {
         global override void shipping(CartExtension.CartCalculateCalculatorRequest request) {
             CartExtension.Cart cart = request.getCart();
             cart.setName(cart.getName() + ', ' + SHIPPING_RECALCULATED);
+            String shippingProductId = cart.getCartItems().iterator().next().getProduct2Id();
+            Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
+            while (cdgIterator.hasNext()) {
+                CartExtension.CartDeliveryGroup cartDeliveryGroup = cdgIterator.next();
+                cartDeliveryGroup.getCartDeliveryGroupMethods().clear();
+                CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod1 =
+                            new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProductId);
+                cartDeliveryGroupMethod1.setCarrier('USPS');
+                cartDeliveryGroupMethod1.setClassOfService('Ground Shipping');
+                cartDeliveryGroup.getCartDeliveryGroupMethods().add(cartDeliveryGroupMethod1);
+                CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod2 =
+                            new CartExtension.CartDeliveryGroupMethod('Same Day Shipping', 15.99, shippingProductId);
+                cartDeliveryGroupMethod2.setCarrier('USPS');
+                cartDeliveryGroupMethod2.setClassOfService('Ground Shipping');
+                cartDeliveryGroup.getCartDeliveryGroupMethods().add(cartDeliveryGroupMethod2);
+            }
         }
 
         global override void tax(CartExtension.CartCalculateCalculatorRequest request) {
@@ -463,3 +570,4 @@ global class CartCalculateSampleUnitTest {
         return buyerActions;
     }
 }
+
