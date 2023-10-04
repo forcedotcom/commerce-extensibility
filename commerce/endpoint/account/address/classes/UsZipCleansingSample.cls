@@ -21,7 +21,7 @@ public with sharing class UsZipCleansingSample {
         if (isValidZip(cleansedZip)) {
             return cleansedZip ;
         } else {
-            throw new CustomEndpointExtensionException(cleansedZip + ' is not a valid US postal code');
+            throw new InvalidAddressSampleException(cleansedZip + ' is not a valid US postal code');
         }
     }
 
