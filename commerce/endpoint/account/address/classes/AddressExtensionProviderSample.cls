@@ -1,4 +1,6 @@
-// This corresponds to /commerce/webstores/${webstoreId}/accounts/${accountId}/addresses/${addressId} and Commerce_Endpoint_Account_Address
+/**
+  *This corresponds to /commerce/webstores/${webstoreId}/accounts/${accountId}/addresses/${addressId} and Commerce_Endpoint_Account_Address
+  */
 public with sharing class AddressExtensionProviderSample extends ConnectApi.BaseEndpointExtension {
 
     public override ConnectApi.EndpointExtensionRequest beforePatch(ConnectApi.EndpointExtensionRequest request) {
