@@ -21,6 +21,7 @@ public with sharing class UsZipCleansingSample {
         if (isValidZip(cleansedZip)) {
             return cleansedZip ;
         } else {
+            // If this exception is not handled, it will result in an HTTP status code of 400 being returned to the client with the message supplied to the exception.
             throw new InvalidAddressSampleException(cleansedZip + ' is not a valid US postal code');
         }
     }

@@ -12,10 +12,10 @@ public with sharing class AddressesExtensionProviderSample extends ConnectApi.Ba
         // Get the response object, the list of addresses. 
         ConnectApi.CommerceAddressCollection output = (ConnectApi.CommerceAddressCollection)response.getResponseObject();
 
-        // Iterate on the addresses and set the name to the first name plus last name if it does not exist.
+        // Iterate through the addresses, set the name name for each address to a concatenation of the first and last name, if it hasn't been populated. Note: The change to the name field is not persisted, this means if the name field was not set but a value is returned through an endpoint using this extension, a SOQL lookup will NOT return a value for the name field.
         // The "after" methods have access to direct manipulation on the objects. 
-        List<ConnectApi.CommerceAddressOutput> items = output.getItems();
-        for (ConnectApi.CommerceAddressOutput address : items) {
+        List<ConnectApi.CommerceAddressOutput> addresses = output.getItems();
+        for (ConnectApi.CommerceAddressOutput address : addresses) {
             if (String.isEmpty(address.getName())) {
                 address.setName(address.getFirstName() + ' ' + address.getLastName());
             }
