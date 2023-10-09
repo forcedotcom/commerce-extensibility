@@ -11,8 +11,8 @@ public with sharing class AddressesExtensionProviderSample extends ConnectApi.Ba
 
         // Iterate on the addresses and set the name to the first name plus last name if it does not exist.
         // The "after" methods have access to direct manipulation on the objects. 
-        List<ConnectApi.CommerceAddressOutput> items = output.getItems();
-        for (ConnectApi.CommerceAddressOutput address : items) {
+        List<ConnectApi.CommerceAddressOutput> addresses = output.getItems();
+        for (ConnectApi.CommerceAddressOutput address : addresses) {
             if (String.isEmpty(address.getName())) {
                 address.setName(address.getFirstName() + ' ' + address.getLastName());
             }
