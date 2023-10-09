@@ -1,14 +1,13 @@
 /**
-  * This corresponds to /commerce/webstores/${webstoreId}/accounts/${accountId}/addresses/${addressId} and Commerce_Endpoint_Account_Address
-  */
-
-/**
 * Sample extension provider for updating addresses
 * This corresponds to the endpoint /commerce/webstores/${webstoreId}/accounts/${accountId}/addresses
 * and is identified by the EPN Commerce_Endpoint_Account_Addresses for registration/mapping
 */
 public with sharing class AddressExtensionProviderSample extends ConnectApi.BaseEndpointExtension {
 
+    /*
+     * Cleanses the US zip on address update
+     */
     public override ConnectApi.EndpointExtensionRequest beforePatch(ConnectApi.EndpointExtensionRequest request) {
         System.debug('We are in the beforePatch entry method of of Commerce_Endpoint_Account_Address extension');
 
