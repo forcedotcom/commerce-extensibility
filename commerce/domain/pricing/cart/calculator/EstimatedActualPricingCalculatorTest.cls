@@ -1,3 +1,6 @@
+/**
+ * @description A Sample unit test for EstimatedActualPricingCalculator.
+ */
 @IsTest
 public class EstimatedActualPricingCalculatorTest {
 
