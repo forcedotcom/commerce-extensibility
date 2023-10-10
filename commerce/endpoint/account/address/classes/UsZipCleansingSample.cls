@@ -2,7 +2,7 @@
  * Class that strips out all of the non-digit characters and throws an exception if the
  * resulting value is not a 5 or 9 digit zip.
  */
-public with sharing class UsZipCleansingSample {
+public class UsZipCleansingSample {
 
     private static Pattern validZipPattern = Pattern.compile('(^\\d{5}$)|(^\\d{9}$)|(^\\d{5}-\\d{4}$)');
 
