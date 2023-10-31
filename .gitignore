@@ -6,3 +6,4 @@ yarn.lock
 *.DS_Store
 **/.DS_Store
 .sfdx/
+.vim-force.com/

@@ -1,0 +1,1 @@
+public with sharing class InvalidAddressSampleException extends Exception {}
