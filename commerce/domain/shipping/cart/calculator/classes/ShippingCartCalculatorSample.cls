@@ -39,54 +39,57 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
     } else {
       CartExtension.CartItemList cartItems = cart.getCartItems();
       Integer numberOfUniqueItems = cartItems.size();
-      CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
-      CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
+      
+      for (Integer i = (cartDeliveryGroups.size() - 1); i >= 0; i--) {
+        CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(i);
+        CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
 
-      // Clean up the CartDeliveryGroupMethods
-      for (Integer i = (cartDeliveryGroupMethods.size() - 1); i >= 0; i--) {
-        CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(i);
-        cartDeliveryGroupMethods.remove(method);
-      }
-      // To clear selected Cart Delivery Group Method
-      cartDeliveryGroup.setSelectedCartDeliveryGroupMethod(null);
-
-      // Get the Shipping Product
-      List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' LIMIT 1];
-      if(shippingProducts.size() == 0) {
-        CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-                CartExtension.CartValidationOutputLevelEnum.ERROR );
-        cvo.setMessage('No Shipping Products have been defined');
-        cartValidationOutputList.add(cvo);
-      } else {
+        // Clean up the CartDeliveryGroupMethods
+        for (Integer j = (cartDeliveryGroupMethods.size() - 1); j >= 0; j--) {
+          CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(j);
+          cartDeliveryGroupMethods.remove(method);
+        }
+        // To clear selected Cart Delivery Group Method
+        cartDeliveryGroup.setSelectedCartDeliveryGroupMethod(null);
+  
+        // Get the Shipping Product
+        List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' LIMIT 1];
+        if(shippingProducts.size() == 0) {
+          CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+                  CartExtension.CartValidationOutputLevelEnum.ERROR );
+          cvo.setMessage('No Shipping Products have been defined');
+          cartValidationOutputList.add(cvo);
+        } else {
           String shippingProduct = Id.valueOf(shippingProducts[0].Id);
           // Create a CartDeliveryGroupMethod record for every shipping option returned from the external service
-            if(useExternalService){
-                // Get shipping options, including aspects like rates and carriers, from the external service.
-                ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
-                  numberOfUniqueItems, cartValidationOutputList
-                  );
+          if(useExternalService) {
+              // Get shipping options, including aspects like rates and carriers, from the external service.
+              ShippingOptionsAndRatesFromExternalService[] shippingOptionsAndRatesFromExternalService = getShippingOptionsAndRatesFromExternalService(
+                numberOfUniqueItems, cartValidationOutputList
+                );
 
-                  // Create a CartDeliveryGroupMethod record for every shipping option returned from the external
-                  // service and every Order Delivery Method that matches
-                 if(shippingOptionsAndRatesFromExternalService != null){
-                  populateCartDeliveryGroupMethodWithShippingOptions(
-                    shippingOptionsAndRatesFromExternalService,
-                    cartDeliveryGroupMethods,shippingProduct,
-                    cartValidationOutputList
-                  );
-                }
-            } else {
-              CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
-              cartDeliveryGroupMethod01.setCarrier('USPS');
-              cartDeliveryGroupMethod01.setClassOfService('Ground Shipping');
-              CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
-              cartDeliveryGroupMethod02.setCarrier('UPS');
-              cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
-              cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
-              cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
-            }
-         }
+                // Create a CartDeliveryGroupMethod record for every shipping option returned from the external
+                // service and every Order Delivery Method that matches
+                if(shippingOptionsAndRatesFromExternalService != null){
+                populateCartDeliveryGroupMethodWithShippingOptions(
+                  shippingOptionsAndRatesFromExternalService,
+                  cartDeliveryGroupMethods,shippingProduct,
+                  cartValidationOutputList
+                );
+              }
+          } else {
+            CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
+            cartDeliveryGroupMethod01.setCarrier('USPS');
+            cartDeliveryGroupMethod01.setClassOfService('Ground Shipping');
+            CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
+            cartDeliveryGroupMethod02.setCarrier('UPS');
+            cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
+            cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
+            cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
+          }
+        }        
       }
+    }
   }
 
    private static String generateRandomString(Integer len) {
