@@ -38,7 +38,7 @@ global class OrchestratorCanUseCartCalculateRTETest {
 
         setUpExtension(cart.getWebStoreId(),
                 'Commerce_Domain_Pricing_CartCalculator',
-                'PricingCalculatorThrowsRTE',
+                'PricingCalculatorThrowsCartCalculateRTE',
                 cart);
 
         CartCalculateHandlesCartCalculateRTE orchestrator = new CartCalculateHandlesCartCalculateRTE();
