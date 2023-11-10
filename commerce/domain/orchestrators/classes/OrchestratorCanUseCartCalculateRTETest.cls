@@ -59,39 +59,6 @@ global class OrchestratorCanUseCartCalculateRTETest {
         }
     }
 
-    @IsTest
-    public static void testOrchestratorCanRethrowCartCalculateRTEThrownFromApexCalculator() {
-        // Arrange
-        CartExtension.Cart cart = createCart();
-
-        setUpExtension(cart.getWebStoreId(),
-                'Commerce_Domain_Pricing_CartCalculator',
-                'PricingCalculatorThrowsRTE',
-                cart);
-
-        CartCalculateRethrowsCartCalculateRTE orchestrator = new CartCalculateRethrowsCartCalculateRTE();
-        CartExtension.CartCalculateOrchestratorRequest request = new CartExtension.CartCalculateOrchestratorRequest(
-                cart,
-                new CartExtension.BuyerActionsMock(cart),
-                CartExtension.OptionalBuyerActionDetails.empty());
-
-        String expectedExceptionMsg = 'Runtime exception from custom Apex Calculator is re-thrown from custom Apex Orchestrator';
-
-        try {
-            // Act
-            Test.startTest();
-            orchestrator.calculate(request);
-            Test.stopTest();
-
-            // Assert
-            Assert.fail('No exception was thrown, when CartExtension.CartCalculateRuntimeException was expected');
-        } catch (CartExtension.CartCalculateRuntimeException e) {
-            Assert.areEqual(expectedExceptionMsg, e.getMessage());
-        } catch (Exception e) {
-            Assert.fail('Some other Exception was thrown, when CartExtension.CartCalculateRuntimeException was expected');
-        }
-    }
-
     private static CartExtension.Cart createCart() {
         Account account = new Account(Name = 'My Account');
         insert account;

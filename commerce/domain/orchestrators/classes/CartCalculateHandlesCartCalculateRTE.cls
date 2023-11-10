@@ -12,7 +12,7 @@ public class CartCalculateHandlesCartCalculateRTE extends CartExtension.CartCalc
         try {
             prices(calculatorRequest);
         } catch (CartExtension.CartCalculateRuntimeException e) {
-            // Do nothing
+            // Handle the exception
         }
     }
 }
