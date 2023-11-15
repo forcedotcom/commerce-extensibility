@@ -17,6 +17,10 @@ Live Heroku services are used to simulate a connection to a third-party system. 
 
 The sample code for Pricing Service includes an Apex class (in `PricingServiceSample.apxc`) that calls an external service to retrieve product prices and then saves that price in the `PricingResponseItems` list.
 
+## Pricing Calculator
+
+The sample code for Pricing Calculator includes an Apex class (in `PricingCalculatorSample.apxc`) that calls an external service to retrieve pricing information and then save those taxes in `CartItem`.
+
 ## Shipping Calculator
 
 The sample code for Shipping Calculator includes an Apex class (in `ShippingCalculatorSample.apxc`) that calls an external service to retrieve shipping rates and then save that rate as an additional charge in the `CartItems` list.
