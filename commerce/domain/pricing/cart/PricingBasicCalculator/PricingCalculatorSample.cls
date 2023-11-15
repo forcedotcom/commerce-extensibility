@@ -36,7 +36,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         }
         catch (Exception e) {
-            throw new CalloutException('An integration error occured in COMPUTE_PRICES. Contact your admin.');
+            throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
         }
         return;
     }
