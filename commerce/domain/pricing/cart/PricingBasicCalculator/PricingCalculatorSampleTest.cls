@@ -50,7 +50,7 @@ public class PricingCalculatorSampleTest {
             }
         }
         CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails.Builder()
-        .withCartItemChanges(changedCartItems).build();
+            .withCartItemChanges(changedCartItems).build();
 
         // Act
         Test.startTest();
@@ -68,8 +68,8 @@ public class PricingCalculatorSampleTest {
         Id cartId = arrangeCart(CartExtension.CartStatusEnum.CHECKOUT);
         List<ID> cartItemIds = arrangeTwoCartItems(cartId);
         insert new CartValidationOutput(CartId = cartId, Level = 'Error',
-        Message = 'Something went wrong with pricing calculator',
-        Name = 'My Error CVO', RelatedEntityId = cartId, Type = 'Pricing');
+            Message = 'Something went wrong with pricing calculator',
+                Name = 'My Error CVO', RelatedEntityId = cartId, Type = 'Pricing');
 
         CartExtension.Cart cart = CartExtension.CartTestUtil.getCart(cartId);
         PricingCalculatorSample calculator =  new PricingCalculatorSample();
@@ -90,8 +90,8 @@ public class PricingCalculatorSampleTest {
         Id cartId = arrangeCart(CartExtension.CartStatusEnum.CHECKOUT);
         List<ID> cartItemIds = arrangeTwoCartItems(cartId);
         insert new CartValidationOutput(CartId = cartId, Level = 'Error',
-        Message = 'Something went wrong with shipping calculator',
-        Name = 'My Error CVO', RelatedEntityId = cartId, Type = 'Shipping');
+            Message = 'Something went wrong with shipping calculator',
+                Name = 'My Error CVO', RelatedEntityId = cartId, Type = 'Shipping');
         CartExtension.Cart cart = CartExtension.CartTestUtil.getCart(cartId);
         PricingCalculatorSample calculator =  new PricingCalculatorSample();
 
@@ -114,6 +114,45 @@ public class PricingCalculatorSampleTest {
         Assert.areEqual(0, pricingCVOCounter);
         Assert.areEqual(1, otherTypesCVOCounter);
         assertCartItemPrices(cart, 10, 20, 10, 20);
+    }
+
+    @IsTest
+    public static void shouldPriceItemsUsingExternalService() {
+        // Arrange
+        CartExtension.Cart cart = arrangeAndLoadCartWithTwoItems(CartExtension.CartStatusEnum.CHECKOUT);
+        // mock http callout to 3rd party service
+        Test.setMock(HttpCalloutMock.class, new SuccessCalloutMock());
+
+        // Act
+        Test.startTest();
+        PricingCalculatorSample calculator =  new PricingCalculatorSample(true);
+        calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        Test.stopTest();
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertCartItemPrices(cart, 10, 20, 10, 20);
+    }
+
+    @IsTest
+    public static void shouldCreateErrorMessageWhenExternalServiceIsDown() {
+
+        // Arrange
+        CartExtension.Cart cart = arrangeAndLoadCartWithTwoItems(CartExtension.CartStatusEnum.CHECKOUT);
+        // mock failed http callout
+        Test.setMock(HttpCalloutMock.class, new FailedCalloutMock());
+
+        // Act
+        Test.startTest();
+        PricingCalculatorSample calculator =  new PricingCalculatorSample(true);
+        calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        Test.stopTest();
+
+        // Assert
+        Assert.areEqual(1, cart.getCartValidationOutputs().size());
+        Assert.areEqual('We are not able to process your cart. Please contact support.',
+        cart.getCartValidationOutputs().iterator().next().getMessage());
+        assertCartItemPrices(cart, null, null, null, null);
     }
 
     /**
@@ -200,5 +239,95 @@ public class PricingCalculatorSampleTest {
         }
         Assert.isTrue(hasSku1);
         Assert.isTrue(hasSku2);
+    }
+
+    public class SuccessCalloutMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            String endpoint = req.getEndpoint();
+            // expected endpoint https://example.com/get-sales-prices?skus='
+            String urlParams = endpoint.split('\\?')[1];
+            String skuString = urlParams.split('skus=')[1];
+            List<String> skus = (List<String>) JSON.deserialize(skuString, List<String>.class);
+            Map<String, PricingDataFromExternalService> prices = new Map<String, PricingDataFromExternalService>();
+            for (String sku: skus) {
+                String decodedSku = EncodingUtil.urlDecode(sku, 'UTF-8');
+                if (decodedSku == SKU1_NAME) {
+                    prices.put(SKU1_NAME, new PricingDataFromExternalService(10,10,9,20,20));
+                }
+                if (decodedSku == SKU2_NAME) {
+                    prices.put(SKU2_NAME, new PricingDataFromExternalService(10,10,9,20,20));
+                }
+            }
+            String body = JSON.serialize(prices);
+            HttpResponse res = new HttpResponse();
+            res.setBody(body);
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(200);
+            return res;
+        }
+    }
+
+    public class FailedCalloutMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+            res.setStatusCode(500);
+            return res;
+        }
+    }
+
+    /**
+    * Structure to store pricing data retrieved from external service. This class simplifies our
+    * ability to access the data when storing it in Salesforce's CartItem.
+    */
+    class PricingDataFromExternalService {
+
+        private Decimal unitPrice;
+        private Decimal listPrice;
+        private Decimal totalAdjustmentAmount;
+        private Decimal totalListPrice;
+        private Decimal totalPrice;
+
+        public PricingDataFromExternalService() {
+            unitPrice = 0.0;
+            listPrice = 0.0;
+            totalAdjustmentAmount = 0.0;
+            totalListPrice = 0.0;
+            totalPrice = 0.0;
+        }
+
+        public PricingDataFromExternalService(
+        Decimal unitPriceObj,
+        Decimal listPriceObj,
+        Decimal totalAdjustmentAmountObj,
+        Decimal totalListPriceObj,
+        Decimal totalPriceObj ) {
+
+            unitPrice = unitPriceObj;
+            listPrice = listPriceObj;
+            totalAdjustmentAmount = totalAdjustmentAmountObj;
+            totalListPrice = TotalListPriceObj;
+            totalPrice = totalPriceObj;
+        }
+
+        public Decimal getUnitPrice() {
+            return unitPrice;
+        }
+
+        public Decimal getListPrice() {
+            return listPrice;
+        }
+
+        public Decimal getTotalAdjustmentAmount() {
+            return totalAdjustmentAmount;
+        }
+
+        public Decimal getTotalListPrice() {
+            return totalListPrice;
+        }
+
+        public Decimal getTotalPrice() {
+            return totalPrice;
+        }
     }
 }

@@ -7,7 +7,19 @@
 */
 public class PricingCalculatorSample extends CartExtension.PricingCartCalculator {
 
-    private static Boolean useExternalService = false;
+    private Boolean useExternalService = false;
+
+    /**
+    * @description All classes extending CartExtension.AbstractCartCalculator must have a default constructor defined
+    */
+    public PricingCalculatorSample() {
+        super();
+    }
+
+    public PricingCalculatorSample(Boolean useExternalService) {
+        super();
+        this.useExternalService = useExternalService;
+    }
 
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
         try {
@@ -18,7 +30,10 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
             Map<String, CartExtension.CartItem> skuToCartItem = new Map<String, CartExtension.CartItem>();
             while (cartItemsIterator.hasNext()) {
                 CartExtension.CartItem cartItem = cartItemsIterator.next();
-                skuToCartItem.put(cartItem.getSku(), cartItem);
+                // Pricing service is expected to calculate prices for only product (not charges)
+                if(cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
+                    skuToCartItem.put(cartItem.getSku(), cartItem);
+                }
             }
 
             Map<String, PricingDataFromExternalService> pricingDataMap = retrievePriceData(skuToCartItem.keySet());
@@ -28,17 +43,15 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
                 CartExtension.CartValidationOutputTypeEnum.PRICING,
                 CartExtension.CartValidationOutputLevelEnum.ERROR);
-                cvo.setMessage('There is no pricing data returned by external service');
+                cvo.setMessage('We are not able to process your cart. Please contact support.');
                 cart.getCartValidationOutputs().add(cvo);
                 return;
             }
             applyPricesToCartItems(cart, skuToCartItem.values().iterator(), pricingDataMap);
-
         }
         catch (Exception e) {
             throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
         }
-        return;
     }
 
     /**
@@ -50,8 +63,8 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
     * @return <<Iterator<CartExtension.CartItem>>>
     */
     private Iterator<CartExtension.CartItem> clearErrorsAndGetCartItemsIterator(
-    CartExtension.Cart cart,
-    CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails) {
+        CartExtension.Cart cart,
+            CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails) {
 
         CartExtension.CartValidationOutputList cartValidationOutputs = cart.getCartValidationOutputs();
         if (!optionalBuyerActionDetails.isPresent() || optionalBuyerActionDetails.get().isCheckoutStarted()) {
@@ -89,7 +102,8 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
     }
 
     private void removeCVOsOfTypeRelatedTo(CartExtension.Cart cart, CartExtension.CartValidationOutputTypeEnum type,
-    CartExtension.CartItem cartItem) {
+        CartExtension.CartItem cartItem) {
+
         if (cartItem.getId() == null) {
             return;
         }
@@ -120,22 +134,23 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
     * Handles pricing data response by external or static response and sets it to cart items.
     */
     private void applyPricesToCartItems(CartExtension.Cart cart, Iterator<CartExtension.CartItem> cartItemsIterator,
-    Map<String, PricingDataFromExternalService> lineItemIdToPricingDetailsMap) {
+        Map<String, PricingDataFromExternalService> lineItemIdToPricingDetailsMap) {
 
         while (cartItemsIterator.hasNext()) {
             CartExtension.CartItem cartItem = cartItemsIterator.next();
+            // Pricing service is expected to calculate prices for only product (not charges)
             if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
                 if(lineItemIdToPricingDetailsMap.get(cartItem.getSku()) == null) {
                     // No price available for the SKU in the Cart. Populate error message for the Buyer.
                     CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                    CartExtension.CartValidationOutputTypeEnum.PRICING,
-                    CartExtension.CartValidationOutputLevelEnum.ERROR,
-                    cartItem);
-                    cvo.setMessage('some error');
+                        CartExtension.CartValidationOutputTypeEnum.PRICING,
+                        CartExtension.CartValidationOutputLevelEnum.ERROR,
+                        cartItem);
+                    cvo.setMessage('No price available for the SKU in the Cart.');
                     cart.getCartValidationOutputs().add(cvo);
                     continue;
                 }
-                setPricingFieldsOnDto(cartItem, lineItemIdToPricingDetailsMap.get(cartItem.getSku()));
+                setPricingFieldsOnCart(cartItem, lineItemIdToPricingDetailsMap.get(cartItem.getSku()));
             }
         }
     }
@@ -143,12 +158,11 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
     /**
     * Sets pricing data returned by external service to Salesforce's CartItem
     */
-    private void setPricingFieldsOnDto(CartExtension.CartItem item, PricingDataFromExternalService pricingLineItem){
+    private void setPricingFieldsOnCart(CartExtension.CartItem item, PricingDataFromExternalService pricingLineItem){
 
         if (pricingLineItem != null) {
             item.setSalesPrice(pricingLineItem.getUnitPrice());
             item.setListPrice(pricingLineItem.getListPrice());
-            Decimal unitAdjustmentAmount = pricingLineItem.getUnitAdjustmentAmount();
             item.setAdjustmentAmount(pricingLineItem.getTotalAdjustmentAmount());
             item.setTotalListPrice(pricingLineItem.getTotalListPrice());
             item.setTotalPrice(pricingLineItem.getTotalPrice());
@@ -192,7 +206,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         Map<String, PricingDataFromExternalService> dataFromExternalService = new Map<String, PricingDataFromExternalService>();
         for(String sku: skus) {
-            PricingDataFromExternalService pricingData = new PricingDataFromExternalService(10,10,9,9,20,20);
+            PricingDataFromExternalService pricingData = new PricingDataFromExternalService(10,10,9,20,20);
             dataFromExternalService.put(sku, pricingData);
         }
         return dataFromExternalService;
@@ -206,7 +220,6 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         private Decimal unitPrice;
         private Decimal listPrice;
-        private Decimal unitAdjustmentAmount;
         private Decimal totalAdjustmentAmount;
         private Decimal totalListPrice;
         private Decimal totalPrice;
@@ -214,7 +227,6 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
         public PricingDataFromExternalService() {
             unitPrice = 0.0;
             listPrice = 0.0;
-            unitAdjustmentAmount = 0.0;
             totalAdjustmentAmount = 0.0;
             totalListPrice = 0.0;
             totalPrice = 0.0;
@@ -223,14 +235,12 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
         public PricingDataFromExternalService(
         Decimal unitPriceObj,
         Decimal listPriceObj,
-        Decimal unitAdjustmentAmountObj,
         Decimal totalAdjustmentAmountObj,
         Decimal totalListPriceObj,
         Decimal totalPriceObj ) {
 
             unitPrice = unitPriceObj;
             listPrice = listPriceObj;
-            unitAdjustmentAmount = unitAdjustmentAmountObj;
             totalAdjustmentAmount = totalAdjustmentAmountObj;
             totalListPrice = TotalListPriceObj;
             totalPrice = totalPriceObj;
@@ -242,10 +252,6 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         public Decimal getListPrice() {
             return listPrice;
-        }
-
-        public Decimal getUnitAdjustmentAmount() {
-            return unitAdjustmentAmount;
         }
 
         public Decimal getTotalAdjustmentAmount() {
