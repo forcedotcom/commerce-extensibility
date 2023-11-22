@@ -10,8 +10,8 @@ public class PricingCalculatorSampleTest {
     private static final String DELIVERYGROUP_NAME = 'My Delivery Group';
     private static final String CART_ITEM1_NAME = 'My Cart Item 1';
     private static final String CART_ITEM2_NAME = 'My Cart Item 2';
-    private static final String SKU1_NAME = 'My SKU 1';
-    private static final String SKU2_NAME = 'My SKU 2';
+    private static String SKU1_NAME = 'My SKU 1';
+    private static String SKU2_NAME = 'My SKU 2';
     private static final Decimal ACTUAL_PRICE_SKU1 = 100.00;
     private static final Decimal ACTUAL_PRICE_SKU2 = 200.00;
 
@@ -153,6 +153,25 @@ public class PricingCalculatorSampleTest {
         Assert.areEqual('We are not able to process your cart. Please contact support.',
         cart.getCartValidationOutputs().iterator().next().getMessage());
         assertCartItemPrices(cart, null, null, null, null);
+    }
+
+    @IsTest
+    public static void testDuplicateSkusReturnValidReponse() {
+        // Arrange
+        // Keep same sku for both products
+        SKU2_NAME = 'My SKU 1';
+        CartExtension.Cart cart = arrangeAndLoadCartWithTwoItems(CartExtension.CartStatusEnum.CHECKOUT);
+
+        // Act
+        Test.startTest();
+        PricingCalculatorSample calculator =  new PricingCalculatorSample();
+        calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        Test.stopTest();
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertCartItemPrices(cart, 10, 20, 10, 20);
+        SKU2_NAME = 'My SKU 2';
     }
 
     /**

@@ -26,17 +26,19 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
             CartExtension.Cart cart = request.getCart();
             Iterator<CartExtension.CartItem> cartItemsIterator = clearErrorsAndGetCartItemsIterator(cart, request.getOptionalBuyerActionDetails());
 
-            // Get the SKUs from each cart item that needs price calculations
-            Map<String, CartExtension.CartItem> skuToCartItem = new Map<String, CartExtension.CartItem>();
+            // Get the SKUs from each cart item that needs price calculation.
+            Set<String> skus = new Set<String>();
+            List<CartExtension.CartItem> cartItems = new List<CartExtension.CartItem>();
             while (cartItemsIterator.hasNext()) {
                 CartExtension.CartItem cartItem = cartItemsIterator.next();
                 // Pricing service is expected to calculate prices for only product (not charges)
                 if(cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
-                    skuToCartItem.put(cartItem.getSku(), cartItem);
+                    skus.add(cartItem.getSku());
+                    cartItems.add(cartItem);
                 }
             }
 
-            Map<String, PricingDataFromExternalService> pricingDataMap = retrievePriceData(skuToCartItem.keySet());
+            Map<String, PricingDataFromExternalService> pricingDataMap = retrievePriceData(skus);
 
             if(pricingDataMap == Null) {
                 // No data returned means there is an issue with underlying 3rd party service. Populate generic error message for the Buyer.
@@ -47,7 +49,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
                 cart.getCartValidationOutputs().add(cvo);
                 return;
             }
-            applyPricesToCartItems(cart, skuToCartItem.values().iterator(), pricingDataMap);
+            applyPricesToCartItems(cart, cartItems.iterator(), pricingDataMap);
         }
         catch (Exception e) {
             throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
@@ -138,20 +140,17 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         while (cartItemsIterator.hasNext()) {
             CartExtension.CartItem cartItem = cartItemsIterator.next();
-            // Pricing service is expected to calculate prices for only product (not charges)
-            if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
-                if(lineItemIdToPricingDetailsMap.get(cartItem.getSku()) == null) {
-                    // No price available for the SKU in the Cart. Populate error message for the Buyer.
-                    CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                        CartExtension.CartValidationOutputTypeEnum.PRICING,
+            if(lineItemIdToPricingDetailsMap.get(cartItem.getSku()) == null) {
+                // No price available for the SKU in the Cart. Populate error message for the Buyer.
+                CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+                    CartExtension.CartValidationOutputTypeEnum.PRICING,
                         CartExtension.CartValidationOutputLevelEnum.ERROR,
-                        cartItem);
-                    cvo.setMessage('No price available for the SKU in the Cart.');
-                    cart.getCartValidationOutputs().add(cvo);
-                    continue;
-                }
-                setPricingFieldsOnCart(cartItem, lineItemIdToPricingDetailsMap.get(cartItem.getSku()));
+                            cartItem);
+                cvo.setMessage('No price available for the SKU in the Cart.');
+                cart.getCartValidationOutputs().add(cvo);
+                continue;
             }
+            setPricingFieldsOnCart(cartItem, lineItemIdToPricingDetailsMap.get(cartItem.getSku()));
         }
     }
 
