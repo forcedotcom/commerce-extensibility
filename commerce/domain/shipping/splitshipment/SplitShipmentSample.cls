@@ -35,6 +35,7 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
         Address deliveryAddress = itemArrange.getDeliveryAddress();
 
         if (itemArrange.getDeliveryGroupId() != null) {
+            // 1. Use the DeliveryGroupId it to get the CartDeliveryGroup
             Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
             while (cdgIterator.hasNext()) {
                 CartExtension.CartDeliveryGroup cartDeliveryGroup = cdgIterator.next();
@@ -42,9 +43,11 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
                     return cartDeliveryGroup;
                 }
             }
-        } else if ((itemArrange.getDeliveryAddress() != null || itemArrange.getDeliveryAddressId() != null) && itemArrange.getDeliveryGroupName() != null) {
-            Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
+        } else if ((itemArrange.getDeliveryAddress() != null || itemArrange.getDeliveryAddressId() != null) 
+                    && itemArrange.getDeliveryGroupName() != null) {
+            // 2. Use the combination of DeliveryAddress + DeliveryGroupName to find the CartDeliveryGroup
 
+            // First, get the DeliveryAddress
             if (itemArrange.getDeliveryAddress() != null) {
                 deliveryAddress = itemArrange.getDeliveryAddress();
             } else {
@@ -53,6 +56,9 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
                 ContactPointAddress contactPointAddress = [SELECT Address FROM ContactPointAddress WHERE (ParentId = :accountId AND Id = :addressId) LIMIT 1];
                 deliveryAddress = contactPointAddress.Address;
             }
+
+            // Now, use the DeliveryAddress to get the CartDeliveryGroup
+            Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
             while (cdgIterator.hasNext()) {
                 CartExtension.CartDeliveryGroup cartDeliveryGroup = cdgIterator.next();
                 if (areAddressesEqual(deliveryAddress, cartDeliveryGroup.getDeliverToAddress()) && itemArrange.getDeliveryGroupName().equals(cartDeliveryGroup.getName())) {
@@ -60,6 +66,8 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
                 }
             }
         }
+
+        // 3. Otherwise, create a new CartDeliveryGroup
         return createCartDeliveryGroup(cart, itemArrange, deliveryAddress);
     }
 
