@@ -9,21 +9,26 @@ global class SplitShipmentUnitTest {
     private static final String DELIVERYGROUP_NAME = 'Default Delivery Group';
     private static final String CART_ITEM1_NAME = 'My Cart Item 1';
     private static final String CART_ITEM2_NAME = 'My Cart Item 2';
+    private static final String CART_ITEM3_NAME = 'My Cart Item 3';
     private static final String SKU1_NAME = 'My SKU 1';
     private static final String SKU2_NAME = 'My SKU 2';
+    private static final String SKU3_NAME = 'My SKU 3';
 
     private static final MockDefaultSplitShipmentService mockService = new MockDefaultSplitShipmentService();
     private static final SplitShipmentCallsSuper splitShipmentCallsSuper = new SplitShipmentCallsSuper(mockService);
     private static final SplitShipmentSample splitShipmentSample = new SplitShipmentSample();
 
+    /**
+     * @description Verify that SplitShipmentService invoked the default implementation.
+     */
     @IsTest
-    public static void splitShipmentApexThatCallsSuperShouldInvokeDefaultSplitShipmentService() {
+    public static void splitShipmentServiceShouldCallDefaultImplementation() {
         // Arrange
         // Create a Cart
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
 
-        // Arrange CartItem1 such that a CartDeliveryGroup can have at most quantity 5 of this particular CartItem
-        CartExtension.ItemArrange itemArrange = createItemArrange(cart.getCartItems().get(0).getId(), 5.0);
+        // Create item arrangement request
+        CartExtension.ItemArrange itemArrange = createItemArrange(cart.getCartItems().get(0).getId(), null);
         List<CartExtension.ItemArrange> itemArrangeList = new List<CartExtension.ItemArrange>();
         itemArrangeList.add(itemArrange);
 
@@ -42,33 +47,36 @@ global class SplitShipmentUnitTest {
         Assert.isTrue(cart.getName().contains('Default Split Shipment Service was invoked'));
     }
 
+    /**
+     * @description Verify that SplitShipmentService arranged CartItems by a "Product Conveyability" custom field.
+     * The 'IsConveyable__c' custom checkbox field on Product2 signifies if the product can go on the conveyer belt
+     * at a warehouse. Items that cannot go on the conveyer belt may be big, bulky, and/or heavy which may require
+     * additional packaging and will take longer to get onto a delivery truck.
+     */
     @IsTest
-    public static void splitShipmentApexShouldNotCreateNewDeliveryGroupsBasedOnCartItemQuantity() {
+    public static void splitShipmentServiceShouldCreateDeliveryGroupBasedOnConveyability() {
         // Arrange
         // Create a Cart with CHECKOUT status
         Id cartId = createCartWithSpecifiedStatus(CartExtension.CartStatusEnum.CHECKOUT);
 
-        // Associate 2 CartItems with the specified quantities to the Cart
-        Decimal cartItem1Quantity = 100.0;
-        Decimal cartItem2Quantity = 2.0;
-        List<ID> Ids = addTwoItemsToCart(cartId, cartItem1Quantity, cartItem2Quantity);
+        // Associate 3 items to the Cart
+        Map<ID, ID> cartItemIdToProductIdMap = addThreeItemsToCart(cartId);
 
+        // Load the Cart
         CartExtension.Cart cart = CartExtension.CartTestUtil.getCart(cartId);
 
-        // Arrange CartItem1 such that a CartDeliveryGroup can have at most quantity 100 of this particular CartItem
-        CartExtension.ItemArrange itemArrange1 = createItemArrange(Ids[0], 100.0);
-
-        // Arrange CartItem2 such that a CartDeliveryGroup can have at most quantity 10 of this particular CartItem
-        CartExtension.ItemArrange itemArrange2 = createItemArrange(Ids[1], 10.0);
-
+        // Create item arrangement request
         List<CartExtension.ItemArrange> itemArrangeList = new List<CartExtension.ItemArrange>();
-        itemArrangeList.add(itemArrange1);
-        itemArrangeList.add(itemArrange2);
+        for (ID cartItemId : cartItemIdToProductIdMap.keySet()) {
+            itemArrangeList.add(createItemArrange(cartItemId, cartItemIdToProductIdMap.get(cartItemId)));
+        }
 
         CartExtension.ItemArrangementRequest request = new CartExtension.ItemArrangementRequest.Builder()
                 .withCart(cart)
                 .withItemArrangeList(itemArrangeList)
                 .build();
+
+        final String expectedNonConveyableCartDeliveryGroupName = 'Non-Conveyable Cart Delivery Group';
 
         // Act
         Test.startTest();
@@ -76,70 +84,25 @@ global class SplitShipmentUnitTest {
         Test.stopTest();
 
         // Assert
-        // Verify that no new CartDeliveryGroup was created
-        Assert.areEqual(1, cart.getCartDeliveryGroups().size());
+        // Verify that we have 2 CartDeliveryGroups, since a non-conveyable CartDeliveryGroup should have been created
+        Assert.areEqual(2, cart.getCartDeliveryGroups().size());
+        Assert.areEqual(DELIVERYGROUP_NAME, cart.getCartDeliveryGroups().get(0).getName());
+        Assert.areEqual(expectedNonConveyableCartDeliveryGroupName, cart.getCartDeliveryGroups().get(1).getName());
 
-        // Verify that no new CartItems were created and that the original CartItems were kept as is
-        Assert.areEqual(2, cart.getCartItems().size());
-        Assert.areEqual(cartItem1Quantity, cart.getCartItems().get(0).getQuantity());
+        // Verify that no new CartItems were created
+        Assert.areEqual(3, cart.getCartItems().size());
+
+        // Verify that the first CartItem was moved to the non-conveyable CartDeliveryGroup
         Assert.areEqual(CART_ITEM1_NAME, cart.getCartItems().get(0).getName());
-        Assert.areEqual(cartItem2Quantity, cart.getCartItems().get(1).getQuantity());
+        Assert.areEqual(expectedNonConveyableCartDeliveryGroupName, cart.getCartItems().get(0).getCartDeliveryGroup().getName());
+
+        // Verify that the second CartItem remained in the original, default CartDeliveryGroup
         Assert.areEqual(CART_ITEM2_NAME, cart.getCartItems().get(1).getName());
-    }
+        Assert.areEqual(DELIVERYGROUP_NAME, cart.getCartItems().get(1).getCartDeliveryGroup().getName());
 
-    @IsTest
-    public static void splitShipmentApexShouldCreateNewDeliveryGroupsBasedOnCartItemQuantity() {
-        // Arrange
-        // Create a Cart with CHECKOUT status
-        Id cartId = createCartWithSpecifiedStatus(CartExtension.CartStatusEnum.CHECKOUT);
-
-        // Associate 2 CartItems with the specified quantities to the Cart
-        Decimal cartItem1Quantity = 100.0;
-        Decimal cartItem2Quantity = 2.0;
-        List<ID> Ids = addTwoItemsToCart(cartId, cartItem1Quantity, cartItem2Quantity);
-
-        CartExtension.Cart cart = CartExtension.CartTestUtil.getCart(cartId);
-
-        // Arrange CartItem1 such that a CartDeliveryGroup can have at most quantity 45 of this particular CartItem
-        CartExtension.ItemArrange itemArrange1 = createItemArrange(Ids[0], 45.0);
-
-        // Arrange CartItem2 such that a CartDeliveryGroup can have at most quantity 10 of this particular CartItem
-        CartExtension.ItemArrange itemArrange2 = createItemArrange(Ids[1], 10.0);
-
-        List<CartExtension.ItemArrange> itemArrangeList = new List<CartExtension.ItemArrange>();
-        itemArrangeList.add(itemArrange1);
-        itemArrangeList.add(itemArrange2);
-
-        CartExtension.ItemArrangementRequest request = new CartExtension.ItemArrangementRequest.Builder()
-                .withCart(cart)
-                .withItemArrangeList(itemArrangeList)
-                .build();
-
-        // Act
-        Test.startTest();
-        splitShipmentSample.arrangeItems(request);
-        Test.stopTest();
-
-        // Assert
-        // Verify that 2 new CartDeliveryGroups were created (totaling 3)
-        Assert.areEqual(3, cart.getCartDeliveryGroups().size());
-
-        // Verify that 2 new CartItems were created (totaling 4)
-        Assert.areEqual(4, cart.getCartItems().size());
-
-        // Verify that the quantity for the (original) CartItem1 was reduced from 100.0 to 45.0
-        Assert.areEqual(45.0, cart.getCartItems().get(0).getQuantity());
-        Assert.areEqual(CART_ITEM1_NAME, cart.getCartItems().get(0).getName());
-
-        // Verify that the quantity for CartItem2 remained the same
-        Assert.areEqual(cartItem2Quantity, cart.getCartItems().get(1).getQuantity());
-        Assert.areEqual(CART_ITEM2_NAME, cart.getCartItems().get(1).getName());
-
-        // Verify that new CartItems were created to account for the remaining quantity from the original CartItem1
-        Assert.areEqual(45.0, cart.getCartItems().get(2).getQuantity());
-        Assert.areEqual('My Cart Item 3', cart.getCartItems().get(2).getName());
-        Assert.areEqual(10.0, cart.getCartItems().get(3).getQuantity());
-        Assert.areEqual('My Cart Item 4', cart.getCartItems().get(3).getName());
+        // Verify that the third CartItem was also moved to the non-conveyable CartDeliveryGroup
+        Assert.areEqual(CART_ITEM3_NAME, cart.getCartItems().get(2).getName());
+        Assert.areEqual(expectedNonConveyableCartDeliveryGroupName, cart.getCartItems().get(2).getCartDeliveryGroup().getName());
     }
 
     /**
@@ -166,49 +129,73 @@ global class SplitShipmentUnitTest {
     }
 
     /**
-     * @description Add two items with the specified quantities to the WebCart.
-     * @param cartId ID of the WebCart for which we need to add two items
-     * @param cartItem1Quantity Quantity of the first CartItem
-     * @param cartItem2Quantity Quantity of the second CartItem
+     * @description Add three items to the specified Cart.
+     * @param cartId ID of the WebCart for which we need to add three items
      *
-     * @return List IDs associated to the newly added CartItems
+     * @return Map CartItemIds that were added, along with their associated ProductId
      */
-    private static List<ID> addTwoItemsToCart(ID cartId, Decimal cartItem1Quantity, Decimal cartItem2Quantity) {
-        CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(Name = DELIVERYGROUP_NAME, CartId = cartId);
+    private static Map<ID, ID> addThreeItemsToCart(ID cartId) {
+        // Set up the default CartDeliveryGroup and configure it such that it is meant only for conveyable products
+        CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(Name = DELIVERYGROUP_NAME, CartId = cartId, IsConveyable__c = true);
         insert deliveryGroup;
+
+        // Configure the first product as non-conveyable
+        Product2 testProduct1 = new Product2(name='My Product 1', IsConveyable__c = false);
+        insert(testProduct1);
 
         CartItem cartItem1 = new CartItem(
                 Name = CART_ITEM1_NAME,
                 CartId = cartId,
                 CartDeliveryGroupId = deliveryGroup.Id,
-                Quantity = cartItem1Quantity,
+                Quantity = 10.0,
                 SKU = SKU1_NAME,
+                Product2Id=testProduct1.Id,
                 Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
         insert cartItem1;
+
+        // Configure the second product as conveyable
+        Product2 testProduct2 = new Product2(name='My Product 2', IsConveyable__c = true);
+        insert(testProduct2);
 
         CartItem cartItem2 = new CartItem(
                 Name = CART_ITEM2_NAME,
                 CartId = cartId,
                 CartDeliveryGroupId = deliveryGroup.Id,
-                Quantity = cartItem2Quantity,
+                Quantity = 2.0,
                 SKU = SKU2_NAME,
+                Product2Id=testProduct2.Id,
                 Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
         insert cartItem2;
 
-        return new List<ID>{ cartItem1.Id, cartItem2.Id };
+        // Configure the third product as non-conveyable
+        Product2 testProduct3 = new Product2(name='My Product 3', IsConveyable__c = false);
+        insert(testProduct3);
+
+        CartItem cartItem3 = new CartItem(
+                Name = CART_ITEM3_NAME,
+                CartId = cartId,
+                CartDeliveryGroupId = deliveryGroup.Id,
+                Quantity = 5.0,
+                SKU = SKU3_NAME,
+                Product2Id=testProduct3.Id,
+                Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
+        insert cartItem3;
+
+        // Return a map where the key -> value is: CartItemId -> ProductId
+        return new Map<ID, ID>{ cartItem1.Id => testProduct1.Id, cartItem2.Id => testProduct2.Id, cartItem3.Id => testProduct3.Id };
     }
 
     /**
      * @description Create an ItemArrange object, provided the cartItemId and quantity
      * @param cartItemId ID of the CartItem
-     * @param quantity Maximum quantity that a CartDeliveryGroup can have for this particular CartItem
+     * @param productId ID of the Product2
      *
      * @return CartExtension.ItemArrange Holds details of how to arrange an item between CartDeliveryGroups
      */
-    private static CartExtension.ItemArrange createItemArrange(ID cartItemId, Decimal quantity) {
+    private static CartExtension.ItemArrange createItemArrange(ID cartItemId, ID productId) {
         return new CartExtension.ItemArrange.Builder()
                 .withCartItemId(cartItemId)
-                .withQuantity(quantity)
+                .withProductId(productId)
                 .withDeliverToCity('Foxborough')
                 .withDeliverToCountry('United States')
                 .withDeliverFromFirstName('Tom')

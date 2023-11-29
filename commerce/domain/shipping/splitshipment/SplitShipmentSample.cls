@@ -3,93 +3,76 @@
  */
 global class SplitShipmentSample extends CartExtension.SplitShipmentService {
 
-    /**
-     * @description All classes extending CartExtension.SplitShipmentService must have a default constructor defined.
-     */
-    global SplitShipmentSample() {}
-
     public virtual override void arrangeItems(CartExtension.ItemArrangementRequest request) {
         CartExtension.Cart cart = request.getCart();
 
-        Iterator<CartExtension.ItemArrange> itemArrangeIterator = request.getItemArrangeList().iterator();
-        while (itemArrangeIterator.hasNext()) {
-            arrangeItemsByCartItemQuantity(cart, itemArrangeIterator.next());
+        Iterator<CartExtension.ItemArrange> iterator = request.getItemArrangeList().iterator();
+        while (iterator.hasNext()) {
+            CartExtension.ItemArrange itemArrange = iterator.next();
+            arrangeItemsByProductConveyability(cart, itemArrange);
         }
     }
 
     /**
-     * @description Item arrangement algorithm based on a maximum CartItem quantity per CartDeliveryGroup.
+     * @description Split up the shipment by conveyable and non-conveyable products. Products that are non-conveyable
+     * cannot go on the conveyor belt at the warehouse because they are too big, bulky, and/or heavy. This means that
+     * these non-conveyable items may require additional packaging and will take longer to get onto a delivery truck.
      * @param cart Holds details about a Cart
-     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
+     * @param itemArrange Holds information on how the item should be arranged
      */
-    private void arrangeItemsByCartItemQuantity(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
-        // Find the CartItem using the cartItemId provided by the ItemArrange object
-        Iterator<CartExtension.CartItem> cartItemsIterator = cart.getCartItems().iterator();
-        while (cartItemsIterator.hasNext()) {
-            CartExtension.CartItem cartItem = cartItemsIterator.next();
-            if (cartItem.getId() == itemArrange.getCartItemId()) {
-                // Check to see if we need to create more CartDeliveryGroups based on quantity
-                if (shouldSplitShipmentByQuantity(cartItem.getQuantity(), itemArrange.getQuantity())) {
-                    splitShipmentByQuantity(cart, cartItem, itemArrange);
-                }
+    private void arrangeItemsByProductConveyability(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
+        // Get conveyable info for the product
+        List<Product2> products = [SELECT IsConveyable__c FROM Product2 WHERE Id =: itemArrange.getProductId() LIMIT 1];
+        Boolean isConveyable = Boolean.valueOf(products[0].IsConveyable__c);
+
+        // If the product is non-conveyable, then we need to move the item to a non-conveyable CartDeliveryGroup
+        if (!isConveyable) {
+            // Check to see if we already have a CartDeliveryGroup for non-conveyable items
+            CartExtension.CartDeliveryGroup nonConveyableCartDeliveryGroup = findNonConveyableCartDeliveryGroup(cart);
+
+            if (nonConveyableCartDeliveryGroup == null) {
+                // Create a CartDeliveryGroup for items that are non-conveyable
+                nonConveyableCartDeliveryGroup = createNonConveyableCartDeliveryGroup(cart, itemArrange);
+            }
+
+            // Move the non-conveyable CartItem to the non-conveyable CartDeliveryGroup
+            moveCartItemToTargetCartDeliveryGroup(cart, itemArrange, nonConveyableCartDeliveryGroup);
+        }
+    }
+
+    /**
+     * @description Check to see if we already have a non-conveyable CartDeliveryGroup in the Cart and if so, return it.
+     * @param cart Holds details about a Cart
+     *
+     * @return CartExtension.CartDeliveryGroup
+     */
+    private CartExtension.CartDeliveryGroup findNonConveyableCartDeliveryGroup(CartExtension.Cart cart) {
+        Iterator<CartExtension.CartDeliveryGroup> iterator = cart.getCartDeliveryGroups().iterator();
+        while (iterator.hasNext()) {
+            CartExtension.CartDeliveryGroup cartDeliveryGroup = iterator.next();
+
+            // Check to see if we already have a CartDeliveryGroup for non-conveyable items
+            if (!(Boolean)cartDeliveryGroup.getCustomField('IsConveyable__c')) {
+                return cartDeliveryGroup;
             }
         }
+
+        // We don't have a CartDeliveryGroup
+        return null;
     }
 
     /**
-     * @description Determines whether or not the shipment should be split into multiple shipments, based on quantity.
-     * @param cartItemQuantity Quantity associated to a CartItem
-     * @param maxCartItemQuantityPerDeliveryGroup Maximum CartItem quantity per CartDeliveryGroup (provided by ItemArrange)
-     *
-     * @return Boolean True if the quantity associated to the CartItem exceeds the quantity associated to ItemArrange
-     */
-    private Boolean shouldSplitShipmentByQuantity(Decimal cartItemQuantity, Decimal maxCartItemQuantityPerDeliveryGroup) {
-        return cartItemQuantity > maxCartItemQuantityPerDeliveryGroup;
-    }
-
-    /**
-     * @description Splits the shipment into N CartItems and N CartDeliveryGroups, based on quantity.
+     * @description Creates a Cart Delivery Group for items that cannot go on the conveyor belt in the warehouse.
      * @param cart Holds details about a Cart
-     * @param cartItem Holds details about a CartItem
      * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
      */
-    private void splitShipmentByQuantity(CartExtension.Cart cart, CartExtension.CartItem cartItem, CartExtension.ItemArrange itemArrange) {
-        // Adjust the original CartItem's quantity to maxCartItemQuantityPerDeliveryGroup and create N number of
-        // CartItems and CartDeliveryGroups until we've accounted for the entire quantity
-        Decimal maxCartItemQuantityPerDeliveryGroup = itemArrange.getQuantity();
-        Decimal remainingQuantity = cartItem.getQuantity() - maxCartItemQuantityPerDeliveryGroup;
-        cartItem.setQuantity(maxCartItemQuantityPerDeliveryGroup);
+    private CartExtension.CartDeliveryGroup createNonConveyableCartDeliveryGroup(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
+        // Set up the non-conveyable CartDeliveryGroup
+        CartExtension.CartDeliveryGroup cartDeliveryGroup = new CartExtension.CartDeliveryGroup();
+        cartDeliveryGroup.setName('Non-Conveyable Cart Delivery Group');
+        cartDeliveryGroup.setCustomField('IsConveyable__c', false);
 
         Address deliveryAddress = itemArrange.getDeliveryAddress();
-        Integer numCartItems = cart.getCartItems().size();
-        Integer cartItemNumber = numCartItems + 1;
-        while (remainingQuantity > 0) {
-            // Create a new CartDeliveryGroup
-            CartExtension.CartDeliveryGroup cartDeliveryGroup = createCartDeliveryGroup(cart, itemArrange, deliveryAddress);
-
-            // Create a new CartItem and associate it to the newly created CartDeliveryGroup
-            CartExtension.CartItem newCartItem = new CartExtension.CartItem(CartExtension.SalesItemTypeEnum.PRODUCT, cartDeliveryGroup, 'My Cart Item ' + cartItemNumber++);
-            newCartItem.setProduct2Id(itemArrange.getProductId());
-            // Update the new CartItem quantity to whichever is smaller, either the remainingQuantity or
-            // maxCartItemQuantityPerDeliveryGroup, so that we don't include more quantity of the CartItem than required
-            newCartItem.setQuantity(Math.min(remainingQuantity, maxCartItemQuantityPerDeliveryGroup));
-
-            // Associate the new CartItem to the Cart
-            cart.getCartItems().add(newCartItem);
-
-            // Adjust the remaining quantity that still needs to be accounted
-            remainingQuantity -= maxCartItemQuantityPerDeliveryGroup;
-        }
-    }
-
-    /**
-     * @description Creates a Cart Delivery Group.
-     * @param cart Holds details about a Cart
-     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
-     * @param deliveryAddress Address information for where the item is being delivered
-     */
-    private CartExtension.CartDeliveryGroup createCartDeliveryGroup(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange, Address deliveryAddress) {
-        CartExtension.CartDeliveryGroup cartDeliveryGroup = new CartExtension.CartDeliveryGroup();
 
         if (deliveryAddress != null) {
             if (deliveryAddress.getStreet() != null) {
@@ -124,5 +107,23 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
 
         cart.getCartDeliveryGroups().add(cartDeliveryGroup);
         return cartDeliveryGroup;
+    }
+
+    /**
+     * @description Move the CartItem to the provided CartDeliveryGroup.
+     * @param cart Representation of a WebCart
+     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
+     * @param targetCartDeliveryGroup The CartDeliveryGroup to which the provided CartItem should be moved
+     */
+    private void moveCartItemToTargetCartDeliveryGroup(CartExtension.Cart cart,
+            CartExtension.ItemArrange itemArrange,
+            CartExtension.CartDeliveryGroup targetCartDeliveryGroup) {
+        Iterator<CartExtension.CartItem> iterator = cart.getCartItems().iterator();
+        while (iterator.hasNext()) {
+            CartExtension.CartItem cartItem = iterator.next();
+            if (cartItem.getId() == itemArrange.getCartItemId()) {
+                cartItem.setCartDeliveryGroup(targetCartDeliveryGroup);
+            }
+        }
     }
 }
