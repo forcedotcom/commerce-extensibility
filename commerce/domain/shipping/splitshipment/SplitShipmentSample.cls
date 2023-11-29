@@ -8,81 +8,88 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
      */
     global SplitShipmentSample() {}
 
-    /**
-     * @description Constructor used by unit tests only. See <<SplitShipmentUnitTest>>.
-     * @param mockService Mocked service which can be used to stub the default Split Shipment logic.
-     */
-    global SplitShipmentSample(final CartExtension.SplitShipmentServiceMock mockService) {
-        super(mockService);
-    }
-
     public virtual override void arrangeItems(CartExtension.ItemArrangementRequest request) {
         CartExtension.Cart cart = request.getCart();
-        List<CartExtension.ItemArrange> itemArrangeList = request.getItemArrangeList();
 
-        for (CartExtension.ItemArrange itemArrange : itemArrangeList) {
-            CartExtension.CartDeliveryGroup cartDeliveryGroup = findOrCreateDeliveryGroup(cart, itemArrange);
-            updateOrCreateCartItemToCartDeliveryGroup(cart, cartDeliveryGroup, itemArrange);
+        Iterator<CartExtension.ItemArrange> itemArrangeIterator = request.getItemArrangeList().iterator();
+        while (itemArrangeIterator.hasNext()) {
+            arrangeItemsByCartItemQuantity(cart, itemArrangeIterator.next());
         }
     }
 
     /**
-     * @description Either finds a Cart Delivery Group based on the given inputs or creates a new one.
-     * @param cart Representation of a `WebCart` record
-     * @param itemArrange Holds details of how to arrange an item between delivery groups
+     * @description Item arrangement algorithm based on a maximum CartItem quantity per CartDeliveryGroup.
+     * @param cart Holds details about a Cart
+     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
      */
-    private CartExtension.CartDeliveryGroup findOrCreateDeliveryGroup(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
-        Address deliveryAddress = itemArrange.getDeliveryAddress();
-
-        if (itemArrange.getDeliveryGroupId() != null) {
-            // 1. Use the DeliveryGroupId it to get the CartDeliveryGroup
-            Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
-            while (cdgIterator.hasNext()) {
-                CartExtension.CartDeliveryGroup cartDeliveryGroup = cdgIterator.next();
-                if (cartDeliveryGroup.getId() == itemArrange.getDeliveryGroupId()) {
-                    return cartDeliveryGroup;
-                }
-            }
-        } else if ((itemArrange.getDeliveryAddress() != null || itemArrange.getDeliveryAddressId() != null) 
-                    && itemArrange.getDeliveryGroupName() != null) {
-            // 2. Use the combination of DeliveryAddress + DeliveryGroupName to find the CartDeliveryGroup
-
-            // First, get the DeliveryAddress
-            if (itemArrange.getDeliveryAddress() != null) {
-                deliveryAddress = itemArrange.getDeliveryAddress();
-            } else {
-                ID accountId = cart.getAccountId();
-                ID addressId = itemArrange.getDeliveryAddressId();
-                ContactPointAddress contactPointAddress = [SELECT Address FROM ContactPointAddress WHERE (ParentId = :accountId AND Id = :addressId) LIMIT 1];
-                deliveryAddress = contactPointAddress.Address;
-            }
-
-            // Now, use the DeliveryAddress to get the CartDeliveryGroup
-            Iterator<CartExtension.CartDeliveryGroup> cdgIterator = cart.getCartDeliveryGroups().iterator();
-            while (cdgIterator.hasNext()) {
-                CartExtension.CartDeliveryGroup cartDeliveryGroup = cdgIterator.next();
-                if (areAddressesEqual(deliveryAddress, cartDeliveryGroup.getDeliverToAddress()) && itemArrange.getDeliveryGroupName().equals(cartDeliveryGroup.getName())) {
-                    return cartDeliveryGroup;
+    private void arrangeItemsByCartItemQuantity(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
+        // Find the CartItem using the cartItemId provided by the ItemArrange object
+        Iterator<CartExtension.CartItem> cartItemsIterator = cart.getCartItems().iterator();
+        while (cartItemsIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemsIterator.next();
+            if (cartItem.getId() == itemArrange.getCartItemId()) {
+                // Check to see if we need to create more CartDeliveryGroups based on quantity
+                if (shouldSplitShipmentByQuantity(cartItem.getQuantity(), itemArrange.getQuantity())) {
+                    splitShipmentByQuantity(cart, cartItem, itemArrange);
                 }
             }
         }
+    }
 
-        // 3. Otherwise, create a new CartDeliveryGroup
-        return createCartDeliveryGroup(cart, itemArrange, deliveryAddress);
+    /**
+     * @description Determines whether or not the shipment should be split into multiple shipments, based on quantity.
+     * @param cartItemQuantity Quantity associated to a CartItem
+     * @param maxCartItemQuantityPerDeliveryGroup Maximum CartItem quantity per CartDeliveryGroup (provided by ItemArrange)
+     *
+     * @return Boolean True if the quantity associated to the CartItem exceeds the quantity associated to ItemArrange
+     */
+    private Boolean shouldSplitShipmentByQuantity(Decimal cartItemQuantity, Decimal maxCartItemQuantityPerDeliveryGroup) {
+        return cartItemQuantity > maxCartItemQuantityPerDeliveryGroup;
+    }
+
+    /**
+     * @description Splits the shipment into N CartItems and N CartDeliveryGroups, based on quantity.
+     * @param cart Holds details about a Cart
+     * @param cartItem Holds details about a CartItem
+     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
+     */
+    private void splitShipmentByQuantity(CartExtension.Cart cart, CartExtension.CartItem cartItem, CartExtension.ItemArrange itemArrange) {
+        // Adjust the original CartItem's quantity to maxCartItemQuantityPerDeliveryGroup and create N number of
+        // CartItems and CartDeliveryGroups until we've accounted for the entire quantity
+        Decimal maxCartItemQuantityPerDeliveryGroup = itemArrange.getQuantity();
+        Decimal remainingQuantity = cartItem.getQuantity() - maxCartItemQuantityPerDeliveryGroup;
+        cartItem.setQuantity(maxCartItemQuantityPerDeliveryGroup);
+
+        Address deliveryAddress = itemArrange.getDeliveryAddress();
+        Integer numCartItems = cart.getCartItems().size();
+        Integer cartItemNumber = numCartItems + 1;
+        while (remainingQuantity > 0) {
+            // Create a new CartDeliveryGroup
+            CartExtension.CartDeliveryGroup cartDeliveryGroup = createCartDeliveryGroup(cart, itemArrange, deliveryAddress);
+
+            // Create a new CartItem and associate it to the newly created CartDeliveryGroup
+            CartExtension.CartItem newCartItem = new CartExtension.CartItem(CartExtension.SalesItemTypeEnum.PRODUCT, cartDeliveryGroup, 'My Cart Item ' + cartItemNumber++);
+            newCartItem.setProduct2Id(itemArrange.getProductId());
+            // Update the new CartItem quantity to whichever is smaller, either the remainingQuantity or
+            // maxCartItemQuantityPerDeliveryGroup, so that we don't include more quantity of the CartItem than required
+            newCartItem.setQuantity(Math.min(remainingQuantity, maxCartItemQuantityPerDeliveryGroup));
+
+            // Associate the new CartItem to the Cart
+            cart.getCartItems().add(newCartItem);
+
+            // Adjust the remaining quantity that still needs to be accounted
+            remainingQuantity -= maxCartItemQuantityPerDeliveryGroup;
+        }
     }
 
     /**
      * @description Creates a Cart Delivery Group.
-     * @param cart Representation of a `WebCart` record
-     * @param itemArrange Holds details of how to arrange an item between delivery groups
+     * @param cart Holds details about a Cart
+     * @param itemArrange Holds details of how to arrange an item between CartDeliveryGroups
      * @param deliveryAddress Address information for where the item is being delivered
      */
     private CartExtension.CartDeliveryGroup createCartDeliveryGroup(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange, Address deliveryAddress) {
         CartExtension.CartDeliveryGroup cartDeliveryGroup = new CartExtension.CartDeliveryGroup();
-
-        if (itemArrange.getDeliveryGroupName() != null) {
-            cartDeliveryGroup.setName(itemArrange.getDeliveryGroupName());
-        }
 
         if (deliveryAddress != null) {
             if (deliveryAddress.getStreet() != null) {
@@ -99,21 +106,6 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
             }
             if (deliveryAddress.getCountry() != null) {
                 cartDeliveryGroup.setDeliverToCountry(deliveryAddress.getCountry());
-            }
-            if (deliveryAddress.getStateCode() != null) {
-                cartDeliveryGroup.setDeliverToStateCode(deliveryAddress.getStateCode());
-            }
-            if (deliveryAddress.getCountryCode() != null) {
-                cartDeliveryGroup.setDeliverToCountryCode(deliveryAddress.getCountryCode());
-            }
-            if (deliveryAddress.getLatitude() != null) {
-                cartDeliveryGroup.setDeliverToLatitude(deliveryAddress.getLatitude());
-            }
-            if (deliveryAddress.getLongitude() != null) {
-                cartDeliveryGroup.setDeliverToLongitude(deliveryAddress.getLongitude());
-            }
-            if (deliveryAddress.getGeocodeAccuracy() != null) {
-                cartDeliveryGroup.setDeliverToGeocodeAccuracy(deliveryAddress.getGeocodeAccuracy());
             }
         }
 
@@ -132,75 +124,5 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
 
         cart.getCartDeliveryGroups().add(cartDeliveryGroup);
         return cartDeliveryGroup;
-    }
-
-    /**
-     * @description Sets the quantity and associates the target Cart Delivery Group for a Cart Item, if it is provided. 
-     * If a Cart Item is not provided, then a new one is created with the provided quantity and Cart Delivery Group.
-     * 
-     * @param cart Representation of a `WebCart` record
-     * @param targetCartDeliveryGroup The Cart Delivery Group to associate with the Cart Item
-     * @param itemArrange Holds details of how to arrange an item between delivery groups
-     */
-    private void updateOrCreateCartItemToCartDeliveryGroup(CartExtension.Cart cart, CartExtension.CartDeliveryGroup targetCartDeliveryGroup, CartExtension.ItemArrange itemArrange) {
-        if (itemArrange.getCartItemId() == null) {
-            CartExtension.CartItem cartItem = new CartExtension.CartItem(CartExtension.SalesItemTypeEnum.PRODUCT, targetCartDeliveryGroup, 'My Cart Item');
-            cartItem.setProduct2Id(itemArrange.getProductId());
-            cartItem.setQuantity(itemArrange.getQuantity());
-            cart.getCartItems().add(cartItem);
-        } else {
-            Iterator<CartExtension.CartItem> cartItemsIterator = cart.getCartItems().iterator();
-            while (cartItemsIterator.hasNext()) {
-                CartExtension.CartItem cartItem = cartItemsIterator.next();
-                if (cartItem.getId() == itemArrange.getCartItemId()) {
-                    if (itemArrange.getQuantity() == 0.0) {
-                        cart.getCartItems().remove(cartItem);
-                    } else {
-                        cartItem.setQuantity(itemArrange.getQuantity());
-                        cartItem.setCartDeliveryGroup(targetCartDeliveryGroup);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * @description Checks whether two addresses are equal.
-     * @param address1 Address 1
-     * @param address2 Address 2
-     */
-    private Boolean areAddressesEqual(Address address1, Address address2) {
-        if (address1 == null && address2 == null) {
-            return true;
-        }
-        if (address1 == null || address2 == null) {
-            return false;
-        }
-        if (address1.getCity() != address2.getCity()) {
-            return false;
-        }
-        if (address1.getCountry() != address2.getCountry()) {
-            return false;
-        }
-        if (address1.getCountryCode() != address2.getCountryCode()) {
-            return false;
-        }
-        if (address1.getGeocodeAccuracy() != address2.getGeocodeAccuracy()) {
-            return false;
-        }
-        if (address1.getPostalCode() != address2.getPostalCode()) {
-            return false;
-        }
-        if (address1.getState() != address2.getState()) {
-            return false;
-        }
-        if (address1.getStateCode() != address2.getStateCode()) {
-            return false;
-        }
-        if (address1.getStreet() != address2.getStreet()) {
-            return false;
-        }
-
-        return true;
     }
 }
