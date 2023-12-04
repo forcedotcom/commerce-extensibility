@@ -157,21 +157,26 @@ public class PricingCalculatorSampleTest {
 
     @IsTest
     public static void testDuplicateSkusReturnValidReponse() {
-        // Arrange
-        // Keep same sku for both products
-        SKU2_NAME = 'My SKU 1';
-        CartExtension.Cart cart = arrangeAndLoadCartWithTwoItems(CartExtension.CartStatusEnum.CHECKOUT);
 
-        // Act
-        Test.startTest();
-        PricingCalculatorSample calculator =  new PricingCalculatorSample();
-        calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
-        Test.stopTest();
+        try{
+            // Arrange
+            // Keep same sku for both products
+            SKU2_NAME = 'My SKU 1';
+            CartExtension.Cart cart = arrangeAndLoadCartWithTwoItems(CartExtension.CartStatusEnum.CHECKOUT);
 
-        // Assert
-        assertNoCartValidationOutputs(cart);
-        assertCartItemPrices(cart, 10, 20, 10, 20);
-        SKU2_NAME = 'My SKU 2';
+            // Act
+            Test.startTest();
+            PricingCalculatorSample calculator =  new PricingCalculatorSample();
+            calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+            Test.stopTest();
+
+            // Assert
+            assertNoCartValidationOutputs(cart);
+            assertCartItemPrices(cart, 10, 20, 10, 20);
+        }
+        finally {
+            SKU2_NAME = 'My SKU 2';
+        }
     }
 
     /**

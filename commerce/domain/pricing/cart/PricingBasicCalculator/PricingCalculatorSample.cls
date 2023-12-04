@@ -52,6 +52,9 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
             applyPricesToCartItems(cart, cartItems.iterator(), pricingDataMap);
         }
         catch (Exception e) {
+            // This is an example of throwing special type of Exception (CartCalculateRuntimeException).
+            // Throwing this exception causes the rollback of all previously applied changes to the cart (in scope of given request)
+            // and may not always be the best choice.
             throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
         }
     }
