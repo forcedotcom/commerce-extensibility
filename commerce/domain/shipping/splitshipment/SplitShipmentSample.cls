@@ -5,11 +5,40 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
 
     public virtual override void arrangeItems(CartExtension.ItemArrangementRequest request) {
         CartExtension.Cart cart = request.getCart();
+        Iterator<CartExtension.ItemArrange> itemArrangeIterator = request.getItemArrangeList().iterator();
 
-        Iterator<CartExtension.ItemArrange> iterator = request.getItemArrangeList().iterator();
-        while (iterator.hasNext()) {
-            CartExtension.ItemArrange itemArrange = iterator.next();
-            arrangeItemsByProductConveyability(cart, itemArrange);
+        // Get all productIds from the ItemArrange list
+        List<Id> productIds = new List<Id>();
+        while (itemArrangeIterator.hasNext()) {
+            CartExtension.ItemArrange itemArrange = itemArrangeIterator.next();
+            productIds.add(itemArrange.getProductId());
+        }
+
+        // Get conveyability info for each product
+        List<Product2> products = [
+            SELECT
+                Id
+                , IsConveyable__c
+            FROM Product2
+            WHERE Id IN :productIds
+        ];
+        Iterator<Product2> productsIterator = products.iterator();
+
+        Map<Id,Boolean> productConveyability = new Map<Id,Boolean>();
+        while (productsIterator.hasNext()) {
+            Product2 product = productsIterator.next();
+            productConveyability.put(product.Id, product.IsConveyable__c);
+        }
+
+        // Arrange items by conveyability
+        itemArrangeIterator = request.getItemArrangeList().iterator();
+        while (itemArrangeIterator.hasNext()) {
+            CartExtension.ItemArrange itemArrange = itemArrangeIterator.next();
+
+            // If the item is non-conveyable, then move it to a non-conveyable CartDeliveryGroup
+            if (productConveyability.get(itemArrange.getProductId()) != true) {
+                arrangeNonConveyableItem(cart, itemArrange);
+            }
         }
     }
 
@@ -20,24 +49,17 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
      * @param cart Holds details about a Cart
      * @param itemArrange Holds information on how the item should be arranged
      */
-    private void arrangeItemsByProductConveyability(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
-        // Get conveyable info for the product
-        List<Product2> products = [SELECT IsConveyable__c FROM Product2 WHERE Id =: itemArrange.getProductId() LIMIT 1];
-        Boolean isConveyable = Boolean.valueOf(products[0].IsConveyable__c);
+    private void arrangeNonConveyableItem(CartExtension.Cart cart, CartExtension.ItemArrange itemArrange) {
+        // Check to see if we already have a CartDeliveryGroup for non-conveyable items
+        CartExtension.CartDeliveryGroup nonConveyableCartDeliveryGroup = findNonConveyableCartDeliveryGroup(cart);
 
-        // If the product is non-conveyable, then we need to move the item to a non-conveyable CartDeliveryGroup
-        if (!isConveyable) {
-            // Check to see if we already have a CartDeliveryGroup for non-conveyable items
-            CartExtension.CartDeliveryGroup nonConveyableCartDeliveryGroup = findNonConveyableCartDeliveryGroup(cart);
-
-            if (nonConveyableCartDeliveryGroup == null) {
-                // Create a CartDeliveryGroup for items that are non-conveyable
-                nonConveyableCartDeliveryGroup = createNonConveyableCartDeliveryGroup(cart, itemArrange);
-            }
-
-            // Move the non-conveyable CartItem to the non-conveyable CartDeliveryGroup
-            moveCartItemToTargetCartDeliveryGroup(cart, itemArrange, nonConveyableCartDeliveryGroup);
+        if (nonConveyableCartDeliveryGroup == null) {
+            // Create a CartDeliveryGroup for items that are non-conveyable
+            nonConveyableCartDeliveryGroup = createNonConveyableCartDeliveryGroup(cart, itemArrange);
         }
+
+        // Move the non-conveyable CartItem to the non-conveyable CartDeliveryGroup
+        moveCartItemToTargetCartDeliveryGroup(cart, itemArrange, nonConveyableCartDeliveryGroup);
     }
 
     /**
