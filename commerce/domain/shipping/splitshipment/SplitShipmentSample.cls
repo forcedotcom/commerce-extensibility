@@ -94,7 +94,14 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
         cartDeliveryGroup.setName('Non-Conveyable Cart Delivery Group');
         cartDeliveryGroup.setCustomField('IsConveyable__c', false);
 
-        Address deliveryAddress = itemArrange.getDeliveryAddress();
+        Address deliveryAddress;
+
+        if (itemArrange.getDeliveryGroupId() != null) {
+            CartDeliveryGroup cdg = [SELECT DeliverToAddress from CartDeliveryGroup where Id =: itemArrange.getDeliveryGroupId()];
+            deliveryAddress = cdg.DeliverToAddress;
+        } else {
+            deliveryAddress = itemArrange.getDeliveryAddress();
+        }
 
         if (deliveryAddress != null) {
             if (deliveryAddress.getStreet() != null) {

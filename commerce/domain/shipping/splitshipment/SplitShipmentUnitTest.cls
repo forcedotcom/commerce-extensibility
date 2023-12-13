@@ -28,7 +28,7 @@ global class SplitShipmentUnitTest {
         CartExtension.Cart cart = CartExtension.CartTestUtil.createCart();
 
         // Create item arrangement request
-        CartExtension.ItemArrange itemArrange = createItemArrange(cart.getCartItems().get(0).getId(), null);
+        CartExtension.ItemArrange itemArrange = createItemArrange(cart.getCartItems().get(0).getId(), null, null);
         List<CartExtension.ItemArrange> itemArrangeList = new List<CartExtension.ItemArrange>();
         itemArrangeList.add(itemArrange);
 
@@ -59,8 +59,11 @@ global class SplitShipmentUnitTest {
         // Create a Cart with CHECKOUT status
         Id cartId = createCartWithSpecifiedStatus(CartExtension.CartStatusEnum.CHECKOUT);
 
+        // Create a default Cart Delivery Group
+        Id defaultCartDeliveryGroupId = createDefaultCartDeliveryGroup(cartId);
+
         // Associate 3 items to the Cart
-        Map<ID, ID> cartItemIdToProductIdMap = addThreeItemsToCart(cartId);
+        Map<ID, ID> cartItemIdToProductIdMap = addThreeItemsToCart(cartId, defaultCartDeliveryGroupId);
 
         // Load the Cart
         CartExtension.Cart cart = CartExtension.CartTestUtil.getCart(cartId);
@@ -68,7 +71,7 @@ global class SplitShipmentUnitTest {
         // Create item arrangement request
         List<CartExtension.ItemArrange> itemArrangeList = new List<CartExtension.ItemArrange>();
         for (ID cartItemId : cartItemIdToProductIdMap.keySet()) {
-            itemArrangeList.add(createItemArrange(cartItemId, cartItemIdToProductIdMap.get(cartItemId)));
+            itemArrangeList.add(createItemArrange(cartItemId, null, cartItemIdToProductIdMap.get(cartItemId)));
         }
 
         CartExtension.ItemArrangementRequest request = new CartExtension.ItemArrangementRequest.Builder()
@@ -129,16 +132,31 @@ global class SplitShipmentUnitTest {
     }
 
     /**
+     * @description Set up the default CartDeliveryGroup and configure it such that it is meant only for conveyable products.
+     * @param cartId ID of the WebCart that needs to be associated to the CartDeliveryGroup
+     *
+     * @return ID The ID of the newly created CartDeliveryGroup
+     */
+    private static ID createDefaultCartDeliveryGroup(ID cartId) {
+        CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(
+            Name = DELIVERYGROUP_NAME,
+            DeliverToName = 'Rob Gronkowski',
+            IsDefault = true,
+            CartId = cartId,
+            IsConveyable__c = true);
+        insert deliveryGroup;
+
+        return deliveryGroup.Id;
+    }
+
+    /**
      * @description Add three items to the specified Cart.
      * @param cartId ID of the WebCart for which we need to add three items
+     * @param deliveryGroupId ID of the CartDeliveryGroup
      *
      * @return Map CartItemIds that were added, along with their associated ProductId
      */
-    private static Map<ID, ID> addThreeItemsToCart(ID cartId) {
-        // Set up the default CartDeliveryGroup and configure it such that it is meant only for conveyable products
-        CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(Name = DELIVERYGROUP_NAME, CartId = cartId, IsConveyable__c = true);
-        insert deliveryGroup;
-
+    private static Map<ID, ID> addThreeItemsToCart(ID cartId, ID deliveryGroupId) {
         // Configure the first product as non-conveyable
         Product2 testProduct1 = new Product2(name='My Product 1', IsConveyable__c = false);
         insert(testProduct1);
@@ -146,7 +164,7 @@ global class SplitShipmentUnitTest {
         CartItem cartItem1 = new CartItem(
                 Name = CART_ITEM1_NAME,
                 CartId = cartId,
-                CartDeliveryGroupId = deliveryGroup.Id,
+                CartDeliveryGroupId = deliveryGroupId,
                 Quantity = 10.0,
                 SKU = SKU1_NAME,
                 Product2Id=testProduct1.Id,
@@ -160,7 +178,7 @@ global class SplitShipmentUnitTest {
         CartItem cartItem2 = new CartItem(
                 Name = CART_ITEM2_NAME,
                 CartId = cartId,
-                CartDeliveryGroupId = deliveryGroup.Id,
+                CartDeliveryGroupId = deliveryGroupId,
                 Quantity = 2.0,
                 SKU = SKU2_NAME,
                 Product2Id=testProduct2.Id,
@@ -174,7 +192,7 @@ global class SplitShipmentUnitTest {
         CartItem cartItem3 = new CartItem(
                 Name = CART_ITEM3_NAME,
                 CartId = cartId,
-                CartDeliveryGroupId = deliveryGroup.Id,
+                CartDeliveryGroupId = deliveryGroupId,
                 Quantity = 5.0,
                 SKU = SKU3_NAME,
                 Product2Id=testProduct3.Id,
@@ -188,24 +206,32 @@ global class SplitShipmentUnitTest {
     /**
      * @description Create an ItemArrange object, provided the cartItemId and quantity
      * @param cartItemId ID of the CartItem
+     * @param deliveryGroupId ID of the CartDeliveryGroup
      * @param productId ID of the Product2
      *
      * @return CartExtension.ItemArrange Holds details of how to arrange an item between CartDeliveryGroups
      */
-    private static CartExtension.ItemArrange createItemArrange(ID cartItemId, ID productId) {
-        return new CartExtension.ItemArrange.Builder()
-                .withCartItemId(cartItemId)
-                .withProductId(productId)
+    private static CartExtension.ItemArrange createItemArrange(ID cartItemId, ID deliveryGroupId, ID productId) {
+        CartExtension.ItemArrange.Builder builder = new CartExtension.ItemArrange.Builder()
+            .withCartItemId(cartItemId)
+            .withProductId(productId);
+
+        if (deliveryGroupId != null) {
+            builder.withDeliveryGroupId(deliveryGroupId);
+        } else {
+            builder
                 .withDeliverToCity('Foxborough')
                 .withDeliverToCountry('United States')
                 .withDeliverFromFirstName('Tom')
                 .withDeliverFromLastName('Brady')
-                .withDeliverToName('Bill Belichick')
+                .withDeliverToName('Rob Gronkowski')
                 .withDeliverToPostalCode('02035')
                 .withDeliverToState('Massachusetts')
                 .withDeliverToStreet('2 Patriot Place')
-                .withDeliverToCompanyName('New England Patriots')
-                .build();
+                .withDeliverToCompanyName('New England Patriots');
+        }
+
+        return builder.build();
     }
 
     global class MockDefaultSplitShipmentService extends CartExtension.SplitShipmentServiceMock {
