@@ -6,6 +6,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 - Shipping Calculator
 - Tax Calculator
 - Tax Service
+- Create Order
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
@@ -34,6 +35,12 @@ The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSamp
 The sample code for Tax Service includes the following Apex classes :
 - an Apex class (in `TaxServiceSample.apxc`) that calls an external service to retrieve tax calculation data and then saves that in the `CalculateTaxesResponseLineItem` list.
 - an Apex class (in `TaxServiceExtensionResolverSample.apxc`) which selects different resolution states (EXECUTE_DEFAULT, EXECUTE_REGISTERED and OFF) for different locales to execute respective implementations (Extension Providers or the Default Salesforce Internal Tax Api).
+
+## Create Order 
+
+The sample code for Create Order extension point includes an Apex class (in `CreateOrderSample.apxc`) that provides an example of how to work with the [OrderGraph](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/OrderGraph.html).
+There is a unit test (see `CreateOrderSampleUnitTest.apxc`) that follows the approach with [Mocking the Base Apex Class in Tests](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/mock-the-base-apex-class.html).
+Also, there is an "integration" test (see `CreateOrderSampleIntegrationTest.apxc`) that 
 
 ## Error Handling
 
