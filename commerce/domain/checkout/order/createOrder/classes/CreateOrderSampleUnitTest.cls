@@ -45,8 +45,6 @@ public class CreateOrderSampleUnitTest {
             order.AccountId = cart.getAccountId();
             order.OwnerId = cart.getOwnerId();
             order.SalesStoreId = cart.getWebStoreId();
-            // cart does not support PoNumber yet
-            //order.PoNumber = cart.getPoNumber();
             Address billingAddress = cart.getBillingAddress();
             if (billingAddress != null) {
                 order.BillingStreet = billingAddress.Street;

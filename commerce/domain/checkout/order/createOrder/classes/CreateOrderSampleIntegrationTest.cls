@@ -30,7 +30,7 @@ public class CreateOrderSampleIntegrationTest {
         Assert.areEqual('Total rounded up cost of products: ' + (2.0 + 3.0), order.Description);
     }
 
-        private static CartExtension.Cart arrangeCart(Decimal[] itemsSalePrice) {
+    private static CartExtension.Cart arrangeCart(Decimal[] itemsSalePrice) {
         Account testAccount = new Account(Name='My Account');
         insert testAccount;
 
