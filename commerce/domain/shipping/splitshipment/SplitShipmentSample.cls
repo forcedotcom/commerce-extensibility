@@ -1,5 +1,9 @@
 /**
- * @description Custom Split Shipment Service sample.
+ * @description Custom Split Shipment Service that creates Cart Delivery Groups by conveyable and non-conveyable products. <br/>
+ * Products that are non-conveyable cannot go on the conveyor belt at the warehouse because they are too big, bulky, and/or heavy. <br/>
+ * This means that these non-conveyable items may require additional packaging and will take longer to get onto a delivery truck. <br/>
+ * NOTE: A custom checkbox field named 'IsConveyable__c' must be created on the Product2 and CartDeliveryGroup entities in order to <br/>
+ * run this Apex.
  */
 global class SplitShipmentSample extends CartExtension.SplitShipmentService {
 
@@ -43,9 +47,7 @@ global class SplitShipmentSample extends CartExtension.SplitShipmentService {
     }
 
     /**
-     * @description Split up the shipment by conveyable and non-conveyable products. Products that are non-conveyable
-     * cannot go on the conveyor belt at the warehouse because they are too big, bulky, and/or heavy. This means that
-     * these non-conveyable items may require additional packaging and will take longer to get onto a delivery truck.
+     * @description Split up the shipment by conveyable and non-conveyable products.
      * @param cart Holds details about a Cart
      * @param itemArrange Holds information on how the item should be arranged
      */
