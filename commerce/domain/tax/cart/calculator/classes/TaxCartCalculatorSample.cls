@@ -112,12 +112,16 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
           cartItem.getNetUnitPrice() != taxDetailsToCartId.getNetUnitPrice()) ||
           !VerifyAdjustmentUpdate(cartItem, taxDetailsToCartId)
         ) {
-          cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
+          if (cartItem.getCartTaxes().size() > 0) {
+            cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
+          }
           for (Integer i = (cartItem.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
             CartExtension.CartTaxList cipaTaxes = cartItem.getCartItemPriceAdjustments()
               .get(i)
               .getCartTaxes();
-            cipaTaxes.remove(cipaTaxes.get(0));
+            if (cipaTaxes.size() > 0) {
+              cipaTaxes.remove(cipaTaxes.get(0));
+            }
           }
           isCartItemModified = true;
         }
@@ -160,7 +164,9 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 cartItem.getCartItemPriceAdjustments(),
                 cipaTax.getId()
               );
-              adj.getCartTaxes().add(promoTax);
+              if (adj != null) {
+                adj.getCartTaxes().add(promoTax);
+              }
             }
         }
       }
@@ -237,7 +243,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     String id
   ) {
     for (Integer i = (cipaList.size() - 1); i >= 0; i--) {
-      if (cipaList.get(i).getId() == id)
+      if (String.valueOf(cipaList.get(i).getId()) == id)
         return cipaList.get(i);
     }
     return null;
