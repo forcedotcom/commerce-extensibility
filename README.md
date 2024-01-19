@@ -4,6 +4,7 @@ This repository contains a reference implementation of the Commerce Extensibilit
 
 - [Domain Extensions for Cart Calculate API](#domain-extensions-for-cart-calculate-api):
 	- Pricing
+    - Promotion
 	- Shipping Calculator
 	- Tax Calculator
 	- Tax Service
@@ -25,6 +26,10 @@ The sample code for Pricing Service includes an Apex class (in `PricingServiceSa
 ### Pricing Calculator
 
 The sample code for Pricing Calculator includes an Apex class (in `PricingCalculatorSample.apxc`) that calls an external service to retrieve pricing information and then save those taxes in `CartItem`.
+
+### Promotion Calculator
+
+The sample code for Promotion Calculator includes an Apex class (in `PromotionCalculatorSample.apxc`) that updates price adjustments for each `CartItem` based on promotion applied.
 
 ### Shipping Calculator
 
