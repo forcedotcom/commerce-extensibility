@@ -87,6 +87,8 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
             cia.setAdjustmentAmountScope(cartextension.AdjustmentAmountScopeEnum.TOTAL);
             cia.setDescription('PromotionCalculator');
             ci.getCartItemPriceAdjustments().add(cia);
+            
+            // Populate TotalPromoAdjustmentAmount for cart-item & update totals based on promotion adjustment
             ci.setTotalPromoAdjustmentAmount(promotionAdjustment);
             ci.setTotalAdjustmentAmount(promotionAdjustment);
             ci.setTotalPriceAfterAllAdjustments(ci.getSalesPrice() - promotionAdjustment);
