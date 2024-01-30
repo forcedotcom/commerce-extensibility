@@ -43,7 +43,7 @@ The sample code for Tax Service includes the following Apex classes :
 ### Error Handling
 
 In order to propagate an error message to the shopper use [CartValidationOutput](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/CartValidationOutput.html).
-Throwing an Exception from any Orchestrator or Calculator would result into CartValidationOutput created on the Cart with generic error message based on Calculator type, telling shopper to contact their admin.
+Throwing an Exception from any Orchestrator or Calculator would result into CartValidationOutput created on the Cart with generic error message based on Calculator type.
 Special case [CartCalculateRuntimeException](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/CartCalculateRuntimeException.html) can be used to rollback all calculation applied to the Cart withing given request processing boundaries.
 All error cases are propagated to the admin as CommerceDiagnosticEvents (see [CommerceDiagnosticEvent](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/sforce_api_objects_commercediagnosticevent.htm))
 
