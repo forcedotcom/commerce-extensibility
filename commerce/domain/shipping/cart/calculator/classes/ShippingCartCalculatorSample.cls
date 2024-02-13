@@ -84,6 +84,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
             cartDeliveryGroupMethod02.setCarrier('UPS');
             cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
+            
             cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
             cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
           }
