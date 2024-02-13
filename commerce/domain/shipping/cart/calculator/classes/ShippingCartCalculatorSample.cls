@@ -203,8 +203,9 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
        }
 
        public ShippingOptionsAndRatesFromExternalService(String someName, String someProvider, Decimal someRate, Decimal someOtherCost, String someServiceName,
-               String someCarrier, String someClassOfService, String someReferenceNumber, Boolean someIsActive, Integer someTransitTimeMin, Integer someTransitTimeMax,
-               CartExtension.TimeUnitEnum someTransitTimeUnit, Integer someProcessTime, CartExtension.TimeUnitEnum someProcessTimeUnit) {
+               String someCarrier, String someClassOfService, String someReferenceNumber, Boolean someIsActive,
+               Integer someTransitTimeMin, Integer someTransitTimeMax,CartExtension.TimeUnitEnum someTransitTimeUnit, Integer someProcessTime,
+               CartExtension.TimeUnitEnum someProcessTimeUnit) {
            name = someName;
            provider = someProvider;
            rate = someRate;
@@ -259,149 +260,12 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
            cartDeliveryGroupMethod.setClassOfService(shippingOption.getClassOfService());
            cartDeliveryGroupMethod.setIsActive(shippingOption.isActive());
            cartDeliveryGroupMethod.setReferenceNumber(shippingOption.getReferenceNumber());
+           cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
            cartDeliveryGroupMethod.setTransitTimeMin(shippingOption.getTransitTimeMin());
            cartDeliveryGroupMethod.setTransitTimeMax(shippingOption.getTransitTimeMax());
            cartDeliveryGroupMethod.setTransitTimeUnit(shippingOption.getTransitTimeUnit());
            cartDeliveryGroupMethod.setProcessTime(shippingOption.getProcessTime());
            cartDeliveryGroupMethod.setProcessTimeUnit(shippingOption.getProcessTimeUnit());
-
-           cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
-       }
-    }
-}
-
-   private static String generateRandomString(Integer len) {
-        final String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
-        String randStr = '';
-        while (randStr.length() < len) {
-        Integer idx = Math.mod(Math.abs(Crypto.getRandomInteger()), chars.length());
-        randStr += chars.substring(idx, idx+1);
-        }
-        return randStr;
-    }
-
-  // Note: This sample method currently only takes in numberOfUniqueItems as an input parameter. For
-  // real-world scenarios, expand the parameter list.
-  private ShippingOptionsAndRatesFromExternalService[] getShippingOptionsAndRatesFromExternalService(
-    Integer numberOfUniqueItems, CartExtension.CartValidationOutputList cartValidationOutputCollection) {
-    final Integer SuccessfulHttpRequest = 200;
-    ShippingOptionsAndRatesFromExternalService[] shippingOptions = new List<ShippingOptionsAndRatesFromExternalService>();
-    Http http = new Http();
-    HttpRequest request = new HttpRequest();
-    request.setEndpoint(externalShippingURL);
-    request.setMethod('GET');
-    HttpResponse response = http.send(request);
-
-    // If the request is successful, parse the JSON response. The response looks like this:
-    // [{"status":"calculated","rate":{"name":"Delivery Method 1","serviceName":"Test Carrier 1","serviceCode":"SNC9600","shipmentCost":11.99,"otherCost":5.99}}, undefined undefined
-    // {"status":"calculated","rate":{"name":"Delivery Method 2","serviceName":"Test Carrier
-    // 2","serviceCode":"SNC9600","shipmentCost":15.99,"otherCost":6.99}}]
-    if (response.getStatusCode() == SuccessfulHttpRequest) {
-      List<Object> results = (List<Object>) JSON.deserializeUntyped(response.getBody());
-      for (Object result : results) {
-        Map<String, Object> subresult = (Map<String, Object>) result;
-        Map<String, Object> providerAndRate = (Map<String, Object>) subresult.get('rate');
-        shippingOptions.add( new ShippingOptionsAndRatesFromExternalService(
-                   (String) providerAndRate.get('name'),
-                   (String) providerAndRate.get('serviceCode'),
-                   (Decimal) providerAndRate.get('shipmentCost'),
-                   (Decimal) providerAndRate.get('otherCost'),
-                   (String) providerAndRate.get('serviceName'),
-                   (String) providerAndRate.get('serviceName'),
-                   (String) providerAndRate.get('serviceCode'),
-                   generateRandomString(10),
-                   true
-               ));
-      }
-      return shippingOptions;
-    } else {
-       String errorMessage = 'We failed to calculate shipping options for your cart.';
-       if(response.getStatusCode() == 404) {
-              errorMessage = '404. You must create a sample application or add your own service which returns a valid response';
-        }
-
-        // Create a CVO with the Error
-        CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-          CartExtension.CartValidationOutputTypeEnum.SHIPPING,
-          CartExtension.CartValidationOutputLevelEnum.ERROR
-        );
-        cvo.setMessage(errorMessage);
-        cartValidationOutputCollection.add(cvo);
-        return null;
-    }
-  }
-
-  // Structure to store the shipping options retrieved from external service.
-  Class ShippingOptionsAndRatesFromExternalService {
-       private String name;
-       private String provider;
-       private Decimal rate;
-       private Decimal otherCost;
-       private String serviceName;
-       private String carrier;
-       private String classOfService;
-       private String referenceNumber;
-       private Boolean isActive;
-
-       public ShippingOptionsAndRatesFromExternalService() {
-           name = '';
-           provider = '';
-           rate = 0.0;
-           serviceName = '';
-           otherCost = 0.0;
-           carrier = '';
-           classOfService = '';
-           referenceNumber = '';
-           isActive = true;
-       }
-
-       public ShippingOptionsAndRatesFromExternalService(String someName, String someProvider, Decimal someRate, Decimal someOtherCost, String someServiceName,
-               String someCarrier, String someClassOfService, String someReferenceNumber, Boolean someIsActive) {
-           name = someName;
-           provider = someProvider;
-           rate = someRate;
-           otherCost = someOtherCost;
-           serviceName = someServiceName;
-           carrier = someCarrier;
-           classOfService = someClassOfService;
-           referenceNumber = someReferenceNumber;
-           isActive = someIsActive;
-       }
-
-       public String getProvider() { return provider; }
-       public Decimal getRate() { return rate; }
-       public Decimal getOtherCost() { return otherCost; }
-       public String getServiceName() { return serviceName; }
-       public String getName() { return name; }
-       public String getCarrier() { return carrier; }
-       public String getClassOfService() { return classOfService; }
-       public String getReferenceNumber() { return referenceNumber; }
-       public Boolean isActive() { return isActive; }
-   }
-
-
-  private void populateCartDeliveryGroupMethodWithShippingOptions(
-   List<ShippingCartCalculatorSample.ShippingOptionsAndRatesFromExternalService> shippingOptions,
-   CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethodCollection,
-   String shippingProduct,
-   CartExtension.CartValidationOutputList cartValidationOutputCollection
- ) {
-     for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
-         String carrier = shippingOption.serviceName;
-         String classOfService = shippingOption.provider;
-           // Create a CartDeliveryGroupMethod for every shipping option returned from the external
-           // service
-           CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(
-             shippingOption.getName(),
-             shippingOption.getRate(),
-             shippingProduct
-           );
-           cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
-           cartDeliveryGroupMethod.setCarrier(shippingOption.getCarrier());
-           cartDeliveryGroupMethod.setClassOfService(shippingOption.getClassOfService());
-           cartDeliveryGroupMethod.setIsActive(shippingOption.isActive());
-           cartDeliveryGroupMethod.setReferenceNumber(shippingOption.getReferenceNumber());
-           cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
        }
     }
 }
