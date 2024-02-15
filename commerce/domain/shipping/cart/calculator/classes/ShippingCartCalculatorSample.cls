@@ -81,13 +81,23 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
             cartDeliveryGroupMethod01.setCarrier('USPS');
             cartDeliveryGroupMethod01.setClassOfService('Ground Shipping');
+            cartDeliveryGroupMethod01.setTransitTimeMin(1);
+            cartDeliveryGroupMethod01.setTransitTimeMax(3);
+            cartDeliveryGroupMethod01.setTransitTimeUnit(CartExtension.TimeUnitEnum.DAYS);
+            cartDeliveryGroupMethod01.setProcessTime(1);
+            cartDeliveryGroupMethod01.setProcessTimeUnit(CartExtension.TimeUnitEnum.WEEKS);
             CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
             cartDeliveryGroupMethod02.setCarrier('UPS');
             cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
+            cartDeliveryGroupMethod02.setTransitTimeMin(1);
+            cartDeliveryGroupMethod02.setTransitTimeMax(4);
+            cartDeliveryGroupMethod02.setTransitTimeUnit(CartExtension.TimeUnitEnum.DAYS);
+            cartDeliveryGroupMethod02.setProcessTime(1);
+            cartDeliveryGroupMethod02.setProcessTimeUnit(CartExtension.TimeUnitEnum.DAYS);
             cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
             cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
           }
-        }        
+        }
       }
     }
   }
@@ -132,7 +142,12 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                    (String) providerAndRate.get('serviceName'),
                    (String) providerAndRate.get('serviceCode'),
                    generateRandomString(10),
-                   true
+                   true,
+                   (Integer) providerAndRate.get('transitTimeMin'),
+                   (Integer) providerAndRate.get('transitTimeMax'),
+                   (CartExtension.TimeUnitEnum) providerAndRate.get('transitTimeUnit'),
+                   (Integer) providerAndRate.get('processTime'),
+                   (CartExtension.TimeUnitEnum) providerAndRate.get('processTimeUnit')
                ));
       }
       return shippingOptions;
@@ -164,6 +179,11 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
        private String classOfService;
        private String referenceNumber;
        private Boolean isActive;
+       private Integer transitTimeMin;
+       private Integer transitTimeMax;
+       private CartExtension.TimeUnitEnum transitTimeUnit;
+       private Integer processTime;
+       private CartExtension.TimeUnitEnum processTimeUnit;
 
        public ShippingOptionsAndRatesFromExternalService() {
            name = '';
@@ -175,10 +195,17 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
            classOfService = '';
            referenceNumber = '';
            isActive = true;
+           transitTimeMin = 0;
+           transitTimeMax = 0;
+           transitTimeUnit = null;
+           processTime = 0;
+           processTimeUnit = null;
        }
 
        public ShippingOptionsAndRatesFromExternalService(String someName, String someProvider, Decimal someRate, Decimal someOtherCost, String someServiceName,
-               String someCarrier, String someClassOfService, String someReferenceNumber, Boolean someIsActive) {
+               String someCarrier, String someClassOfService, String someReferenceNumber, Boolean someIsActive,
+               Integer someTransitTimeMin, Integer someTransitTimeMax,CartExtension.TimeUnitEnum someTransitTimeUnit, Integer someProcessTime,
+               CartExtension.TimeUnitEnum someProcessTimeUnit) {
            name = someName;
            provider = someProvider;
            rate = someRate;
@@ -188,6 +215,11 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
            classOfService = someClassOfService;
            referenceNumber = someReferenceNumber;
            isActive = someIsActive;
+           transitTimeMin = someTransitTimeMin;
+           transitTimeMax = someTransitTimeMax;
+           transitTimeUnit = someTransitTimeUnit;
+           processTime = someProcessTime;
+           processTimeUnit = someProcessTimeUnit;
        }
 
        public String getProvider() { return provider; }
@@ -199,6 +231,11 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
        public String getClassOfService() { return classOfService; }
        public String getReferenceNumber() { return referenceNumber; }
        public Boolean isActive() { return isActive; }
+       public Integer getTransitTimeMin() { return transitTimeMin; }
+       public Integer getTransitTimeMax() { return transitTimeMax; }
+       public CartExtension.TimeUnitEnum getTransitTimeUnit() { return transitTimeUnit; }
+       public Integer getProcessTime() { return processTime; }
+       public CartExtension.TimeUnitEnum getProcessTimeUnit() { return processTimeUnit; }
    }
 
 
@@ -224,6 +261,11 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
            cartDeliveryGroupMethod.setIsActive(shippingOption.isActive());
            cartDeliveryGroupMethod.setReferenceNumber(shippingOption.getReferenceNumber());
            cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
+           cartDeliveryGroupMethod.setTransitTimeMin(shippingOption.getTransitTimeMin());
+           cartDeliveryGroupMethod.setTransitTimeMax(shippingOption.getTransitTimeMax());
+           cartDeliveryGroupMethod.setTransitTimeUnit(shippingOption.getTransitTimeUnit());
+           cartDeliveryGroupMethod.setProcessTime(shippingOption.getProcessTime());
+           cartDeliveryGroupMethod.setProcessTimeUnit(shippingOption.getProcessTimeUnit());
        }
     }
 }
