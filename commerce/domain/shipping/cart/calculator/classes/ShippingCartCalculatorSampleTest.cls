@@ -73,8 +73,8 @@ global with sharing class ShippingCartCalculatorSampleTest {
         System.assertEquals('D', deliveryMethod02.getProcessTimeUnit());
     }
     private Id getDefaultShippingChargeProduct2Id() {
-            // In this example we will name the product representing shipping charges 'Shipping Charge'.
-            // Check to see if a Product2 with that name already exists.
+
+            // Check to see if a Product2 with name 'Shipping Charge' already exists.
             // If it doesn't exist, create one.
             String shippingChargeProduct2Name = 'Shipping Charge';
             List<Product2> shippingChargeProducts = [SELECT Id FROM Product2 WHERE Name = :shippingChargeProduct2Name];
