@@ -74,7 +74,9 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
         while(ciIter.hasNext()) {
 
             CartExtension.CartItem ci = ciIter.next();
-            Decimal promotionAdjustment = (ci.getSalesPrice() * (pctDiscount/100) * ci.getQuantity());
+            Decimal totalLineAmount = (ci.getTotalLineAmount() == null) ?
+                                      (ci.getSalesPrice() * ci.getQuantity()) : ci.getTotalLineAmount();
+            Decimal promotionAdjustment = totalLineAmount * (pctDiscount/100);
             promotionAdjustment = promotionAdjustment.setScale(2,System.RoundingMode.HALF_DOWN); // Currency precision rounding
             CartExtension.CartItemPriceAdjustment cia = new
                                 CartExtension.CartItemPriceAdjustment(cartextension.CartAdjustmentTargetTypeEnum.ITEM, // AdjustmentTargetType
@@ -87,7 +89,7 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
             cia.setAdjustmentAmountScope(cartextension.AdjustmentAmountScopeEnum.TOTAL);
             cia.setDescription('PromotionCalculator');
             ci.getCartItemPriceAdjustments().add(cia);
-            
+
             // Populate TotalPromoAdjustmentAmount for cart-item & update totals based on promotion adjustment
             ci.setTotalPromoAdjustmentAmount(promotionAdjustment);
             ci.setTotalAdjustmentAmount(promotionAdjustment);
