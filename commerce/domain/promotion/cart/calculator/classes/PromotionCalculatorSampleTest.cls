@@ -8,7 +8,7 @@ global class PromotionCalculatorSampleTest {
     private static final String WEBSTORE_NAME = 'My WebStore';
     private static final String DELIVERYGROUP_NAME = 'Default Delivery Group';
     private static final String CART_ITEM1_NAME = 'My Cart Item 1';
-    private static final String PRODUCT_NAME = '01tSB000000I0knYAC';
+    private static final String PRODUCT_ID = '01tSB000000I0knYAC';
     private static final Decimal SALES_PRICE = 80.00;
     private static final Decimal DISCOUNT_VALUE = -5.0;
     private static final Decimal TOTAL_ADJUSTMENT_AMOUNT = -4.0;
@@ -86,7 +86,7 @@ global class PromotionCalculatorSampleTest {
             CartId = cartId,
             CartDeliveryGroupId = deliveryGroup.Id,
             Quantity = 1,
-            Product2Id = PRODUCT_NAME,
+            Product2Id = PRODUCT_ID,
             SalesPrice = SALES_PRICE,
             Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
         insert cartItem1;
