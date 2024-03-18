@@ -374,7 +374,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             Double tierAdjustmentTax = (tierAdjustment!=null ? tierAdjustment : 0.00) * multiplier;
 
             CartExtension.CartItemPriceAdjustmentList itemizedPromotions = cartItem.getCartItemPriceAdjustments();
-          Iterator<CartExtension.CartItemPriceAdjustment> itemizedPromotionsIterator = itemizedPromotions.iterator();
+            Iterator<CartExtension.CartItemPriceAdjustment> itemizedPromotionsIterator = itemizedPromotions.iterator();
             String itemizedPromotionTaxResp = '[';
             while (itemizedPromotionsIterator.hasNext()) {
                 CartExtension.CartItemPriceAdjustment itemAdj = itemizedPromotionsIterator.next();
