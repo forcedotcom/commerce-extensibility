@@ -114,8 +114,8 @@ global class CartCalculateSampleUnitTest {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
-        // Arrange BuyerActions and BuyerActionDetails as if the Buyer added a coupon
-        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForApplyCoupon(cart);
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer added a coupon at checkout
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForApplyCouponAtCheckout(cart);
         CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForApplyCoupon(cart.getCartAdjustmentBases().get(0));
         CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
 
@@ -376,6 +376,10 @@ global class CartCalculateSampleUnitTest {
         return getCouponChangedBuyerActions(cart);
     }
 
+    private static CartExtension.BuyerActionsMock getBuyerActionsForApplyCouponAtCheckout(CartExtension.Cart cart) {
+        return getCouponChangedAtCheckoutBuyerActions(cart);
+    }
+
     private static CartExtension.BuyerActionDetails getBuyerActionDetailsForApplyCoupon(CartExtension.CartAdjustmentBasis cartAdjustmentBasis) {
         CartExtension.CouponChange couponChange = new CartExtension.CouponChange.Builder()
                                                             .withChangedAdjustmentBasis(CartExtension.OptionalCartAdjustmentBasis.of(cartAdjustmentBasis))
@@ -479,6 +483,13 @@ global class CartCalculateSampleUnitTest {
     private static CartExtension.BuyerActionsMock getCouponChangedBuyerActions(CartExtension.Cart cart) {
         CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
         buyerActions.setCouponChanged(True);
+        return buyerActions;
+    }
+
+    private static CartExtension.BuyerActionsMock getCouponChangedAtCheckoutBuyerActions(CartExtension.Cart cart) {
+        CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
+        buyerActions.setCouponChanged(True);
+        buyerActions.setCheckoutStarted(True);
         return buyerActions;
     }
 }
