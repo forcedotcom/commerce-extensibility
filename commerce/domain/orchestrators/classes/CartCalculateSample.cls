@@ -1,8 +1,8 @@
 /**
 * @description This is a sample orchestrator that calls the inventory, pricing, promotions, shipping and tax calculators.
 * This class must extend CartExtension.CartCalculate and must be linked to the orchestrator extension point (Commerce_Domain_Cart_Calculate).
-* Calculates pricing and promotions for operations: Add to cart, remove from cart, edit cart item.
-* Calculates promotions for operations: add coupon, remove coupon.
+* Calculates pricing and promotions for operations: Add product to cart, remove product from cart, edit cart item quantity.
+* Calculates promotions for operations: add coupon to cart, remove coupon from cart.
 * Calculates pricing, promotions, inventory for start checkout operation (without shipping address available).
 * Calculates pricing, promotions, inventory, shipping, post shipping and taxes for start checkout operation (with shipping address available).
 * Calculates shipping, post shipping and taxes for update shipping address operation.
