@@ -110,11 +110,30 @@ global class CartCalculateSampleUnitTest {
     }
 
     @IsTest
-    public static void shouldRunPromotionsWhenBuyerRemovesCoupon() {
+    public static void shouldRunShippingAndTaxesWhenBuyerAddsCouponAtCheckout() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
         // Arrange BuyerActions and BuyerActionDetails as if the Buyer added a coupon
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForApplyCoupon(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForApplyCoupon(cart.getCartAdjustmentBases().get(0));
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED});
+    }
+
+    @IsTest
+    public static void shouldRunPromotionsWhenBuyerRemovesCoupon() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart();
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer deleted a coupon
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForDeleteCoupon(cart);
         CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForDeleteCoupon();
         CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);

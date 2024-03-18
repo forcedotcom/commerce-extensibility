@@ -1,8 +1,8 @@
 /**
 * @description This is a sample orchestrator that calls the inventory, pricing, promotions, shipping and tax calculators.
 * This class must extend CartExtension.CartCalculate and must be linked to the orchestrator extension point (Commerce_Domain_Cart_Calculate).
-* Calculates pricing and promotions for operations: Add product to cart, remove product from cart, edit cart item quantity.
-* Calculates promotions for operations: add coupon to cart, remove coupon from cart.
+* Calculates pricing and promotions for operations: Add to cart, remove from cart, edit cart item.
+* Calculates promotions for operations: add coupon, remove coupon.
 * Calculates pricing, promotions, inventory for start checkout operation (without shipping address available).
 * Calculates pricing, promotions, inventory, shipping, post shipping and taxes for start checkout operation (with shipping address available).
 * Calculates shipping, post shipping and taxes for update shipping address operation.
@@ -30,12 +30,13 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
         // Use BuyerActions to decide which calculators to invoke
         CartExtension.BuyerActions buyerActions = request.getBuyerActions();
+        boolean isCouponAppliedInCheckout = isCouponAppliedInCheckout(buyerActions);
         boolean runPricing = buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
         boolean runPromotions = buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
         boolean runInventory = buyerActions.isCheckoutStarted();
-        boolean runShipping = buyerActions.isDeliveryGroupChanged();
-        boolean runPostShipping = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected();
-        boolean runTaxes = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected();
+        boolean runShipping = buyerActions.isDeliveryGroupChanged() || isCouponAppliedInCheckout;
+        boolean runPostShipping = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
+        boolean runTaxes = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
@@ -102,5 +103,9 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         }
 
         return false;
+    }
+
+    private Boolean isCouponAppliedInCheckout(CartExtension.BuyerActions buyerActions) {
+        return buyerActions.isCheckoutStarted() && buyerActions.isCouponChanged();
     }
 }
