@@ -124,8 +124,7 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
-        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED});
+        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED, CART_REPRICED, INVENTORY_CHECKED});
     }
 
     @IsTest
