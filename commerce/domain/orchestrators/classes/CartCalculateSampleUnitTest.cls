@@ -118,9 +118,9 @@ global class CartCalculateSampleUnitTest {
     @IsTest
     public static void shouldRunAllCalculatorsWhenBuyerAddsCouponAtCheckout() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart();
+        CartExtension.Cart cart = arrangeCart('Checkout');
 
-        // Arrange BuyerActions and BuyerActionDetails as if the Buyer deleted a coupon at checkout
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer added a coupon at checkout
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForApplyCouponAtCheckout(cart);
         CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForApplyCoupon(cart.getCartAdjustmentBases().get(0));
         CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
@@ -130,7 +130,10 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
-        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED, CART_REPRICED, INVENTORY_CHECKED});
+        assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED});
+
+
     }
 
     @IsTest
@@ -235,6 +238,28 @@ global class CartCalculateSampleUnitTest {
         insert testWebStore;
 
         WebCart testCart = new WebCart(Name='My Cart', WebStoreId=testWebStore.Id, AccountId=testAccount.Id);
+        insert testCart;
+
+        CartDeliveryGroup testDeliveryGroup = new CartDeliveryGroup(Name='My Delivery Group', CartId=testCart.Id);
+        insert testDeliveryGroup;
+
+        CartItem testCartItem = new CartItem(Name='My Cart Item', CartId=testCart.Id, CartDeliveryGroupId=testDeliveryGroup.Id);
+        insert testCartItem;
+
+        WebCartAdjustmentBasis testCartAdjustmentBasis = new WebCartAdjustmentBasis(Name='My Coupon', WebCartId=testCart.Id);
+        insert testCartAdjustmentBasis;
+
+        return CartExtension.CartTestUtil.getCart(testCart.Id);
+    }
+
+    private static CartExtension.Cart arrangeCart(String cartStatus) {
+        Account testAccount = new Account(Name='My Account');
+        insert testAccount;
+
+        WebStore testWebStore = new WebStore(Name='My WebStore');
+        insert testWebStore;
+
+        WebCart testCart = new WebCart(Name='My Cart', WebStoreId=testWebStore.Id, AccountId=testAccount.Id, Status=cartStatus);
         insert testCart;
 
         CartDeliveryGroup testDeliveryGroup = new CartDeliveryGroup(Name='My Delivery Group', CartId=testCart.Id);
@@ -494,7 +519,6 @@ global class CartCalculateSampleUnitTest {
     private static CartExtension.BuyerActionsMock getCouponChangedAtCheckoutBuyerActions(CartExtension.Cart cart) {
         CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
         buyerActions.setCouponChanged(True);
-        buyerActions.setCheckoutStarted(True);
         return buyerActions;
     }
 }
