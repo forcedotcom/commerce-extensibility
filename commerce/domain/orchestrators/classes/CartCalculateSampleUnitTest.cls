@@ -1,3 +1,9 @@
+/*
+ * Copyright 2023 salesforce.com, inc.
+ * All Rights Reserved
+ * Company Confidential
+ */
+
 /**
  * @description A Sample unit test for CartCalculateSample.
  */
@@ -110,11 +116,11 @@ global class CartCalculateSampleUnitTest {
     }
 
     @IsTest
-    public static void shouldRunShippingAndTaxesWhenBuyerAddsCouponAtCheckout() {
+    public static void shouldRunAllCalculatorsWhenBuyerAddsCouponAtCheckout() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart();
 
-        // Arrange BuyerActions and BuyerActionDetails as if the Buyer added a coupon at checkout
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer deleted a coupon at checkout
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForApplyCouponAtCheckout(cart);
         CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForApplyCoupon(cart.getCartAdjustmentBases().get(0));
         CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);

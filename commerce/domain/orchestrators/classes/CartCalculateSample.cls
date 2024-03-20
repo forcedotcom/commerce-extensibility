@@ -30,7 +30,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
         // Use BuyerActions to decide which calculators to invoke
         CartExtension.BuyerActions buyerActions = request.getBuyerActions();
-        boolean isCouponAppliedInCheckout = isCouponAppliedInCheckout(buyerActions);
+        boolean isCouponAppliedInCheckout = isCouponAppliedInCheckout(buyerActions, cart);
         boolean runPricing = buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
         boolean runPromotions = buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
         boolean runInventory = buyerActions.isCheckoutStarted();
@@ -105,7 +105,8 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         return false;
     }
 
-    private Boolean isCouponAppliedInCheckout(CartExtension.BuyerActions buyerActions) {
-        return buyerActions.isCheckoutStarted() && buyerActions.isCouponChanged();
-    }
+    private Boolean isCouponAppliedInCheckout(CartExtension.BuyerActions buyerActions, CartExtension.Cart cart) {
+        return (cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT || buyerActions.isCheckoutStarted()) &&
+                buyerActions.isCouponChanged();
+        }
 }
