@@ -107,5 +107,5 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
     private Boolean isCouponAppliedInCheckout(CartExtension.BuyerActions buyerActions, CartExtension.Cart cart) {
         return cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT && buyerActions.isCouponChanged();
-        }
+    }
 }
