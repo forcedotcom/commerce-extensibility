@@ -18,11 +18,16 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       // previous CVOs as they have been previously handled by the Cart Calculate API.
       CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
       Iterator<CartExtension.CartValidationOutput> cartValidationOutputCollectionIterator = cartValidationOutputCollection.iterator();
+      List<CartExtension.CartValidationOutput> cvoToRemove = new List<CartExtension.CartValidationOutput>();
       while (cartValidationOutputCollectionIterator.hasNext()) {
         CartExtension.CartValidationOutput cvo = cartValidationOutputCollectionIterator.next();
         if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
-          cartValidationOutputCollection.remove(cvo);
+          cvoToRemove.add(cvo);
         }
+      }
+      // Remove cartValidationOutputs from cartValidationOutputCollection
+      for(CartExtension.CartValidationOutput cvo : cvoToRemove){
+      	cartValidationOutputCollection.remove(cvo);
       }
 
       // There should be one delivery group per cart.
@@ -42,7 +47,9 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
 
         if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
-          cartItemById.put(cartItem.getId(), cartItem);
+          if (cartItem.getId() != null) {
+          	cartItemById.put(cartItem.getId(), cartItem);
+          }
         } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
           // Shipping cart items are uniquely identified using delivery group id.
           CartExtension.CartDeliveryGroup deliveryGroup = cartItem.getCartDeliveryGroup();
