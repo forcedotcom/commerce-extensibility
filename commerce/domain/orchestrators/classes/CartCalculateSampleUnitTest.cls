@@ -116,7 +116,7 @@ global class CartCalculateSampleUnitTest {
     }
 
     @IsTest
-    public static void ShouldRunPromotionsAndShippingAndPostShippingAndTaxesWhenBuyerAddsCouponDuringCheckout() {
+    public static void shouldRunPromotionsAndShippingAndPostShippingAndTaxesWhenBuyerAddsCouponDuringCheckout() {
         // Arrange Cart
         CartExtension.Cart cart = arrangeCart('Checkout');
 
