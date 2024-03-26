@@ -1,17 +1,22 @@
- /**
+/**
   * @description This sample is for the situations where Promotion Calculation needs to be extended or overridden via the
   * extension point for the Promotion Calculator. You are expected to refer this and write your own implementation.
   * This class must extend the CartExtension.PromotionsCartCalculator class to be processed.
+  *
+  * In this example cart items are evaluated against a BOGO (Buy X, Get Y) promotion > Buy 5 items of qualifying product X,
+  * get $2 off a unit of target Y.
   */
 public with sharing class PromotionCalculatorSample extends CartExtension.PromotionsCartCalculator {
 
-    // You MUST change this to be a valid promotion id.
-    public static final String DUMMY_PROMOTION_ID = '0c8xx000000003FAAQ';
+    // You MUST change following to be a valid promotion, product ids.
+    public static final String DUMMY_PROMOTION_ID = '0c8xx00000004JlAAI';
+    private static final String QUALIFIER_PRODUCT_ID = '01txx0000006lmmAAA';
+    private static final String TARGET_PRODUCT_ID = '01txx0000006lmuAAA';
 
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
         cartextension.Cart cart = request.getCart();
         resetAllAdjustments(cart);
-        applyAdjustments(cart);
+        evaluatePromotionForCartItems(cart);
     }
 
     /**
@@ -62,39 +67,78 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
         }
     }
 
-
     /**
-     * @description Apply flat 5 percent discount across all cart items
+     * @description Evaluate BOGO promotion (Buy 5 items of qualifying product, get $2 off a unit of target product,
+     * for cart items and apply adjustments.
      * @param cart Holds details about cart
      */
-    public static void applyAdjustments(CartExtension.Cart cart) {
-
-        Decimal pctDiscount = -5;
+    private static void evaluatePromotionForCartItems(CartExtension.Cart cart) {
+		Integer targetCount = 0;
+        Integer qualifierCount = 0;
+    	Integer adjustmentCount = 0;
         Iterator<CartExtension.CartItem> ciIter = cart.getCartItems().iterator();
+
+    	if(ciIter.hasNext()) {
+    		qualifierCount = getProductCount(cart, QUALIFIER_PRODUCT_ID);
+    		targetCount = getProductCount(cart, TARGET_PRODUCT_ID);
+    		adjustmentCount = qualifierCount / 5;
+    		adjustmentCount = Math.min(adjustmentCount, targetCount);
+    		applyAdjustments(cart, adjustmentCount);
+    	}
+    }
+
+    /**
+     * @description Helper method to get count of given product in cart.
+     * @param cart Holds details about cart
+     * @param productId Product Id
+     */
+    private static Integer getProductCount(CartExtension.Cart cart, String productId) {
+		Iterator<CartExtension.CartItem> ciIter = cart.getCartItems().iterator();
         while(ciIter.hasNext()) {
+            CartExtension.CartItem ci = ciIter.next();
+        	if (ci.getProduct2Id() == ID.valueOf(productId)) {
+    			return ci.getQuantity().intValue();
+			}
+        }
+        return 0;
+    }
+
+    /**
+     * @description Apply $2 off discount on given number of target units
+     * @param cart Holds details about cart
+     * @param adjustmentCount Number of target units the discount applies to
+     */
+    private static void applyAdjustments(CartExtension.Cart cart, Integer adjustmentCount) {
+
+        Decimal promotionAdjustment = -2;
+        Iterator<CartExtension.CartItem> ciIter = cart.getCartItems().iterator();
+        while(ciIter.hasNext() && adjustmentCount > 0) {
 
             CartExtension.CartItem ci = ciIter.next();
-            Decimal totalLineAmount = (ci.getTotalLineAmount() == null) ?
-                                      (ci.getSalesPrice() * ci.getQuantity()) : ci.getTotalLineAmount();
-            Decimal promotionAdjustment = totalLineAmount * (pctDiscount/100);
-            promotionAdjustment = promotionAdjustment.setScale(2,System.RoundingMode.HALF_DOWN); // Currency precision rounding
-            CartExtension.CartItemPriceAdjustment cia = new
-                                CartExtension.CartItemPriceAdjustment(cartextension.CartAdjustmentTargetTypeEnum.ITEM, // AdjustmentTargetType
-                                                                      promotionAdjustment, // TotalAmount
-                                                                      cartextension.PriceAdjustmentSourceEnum.PROMOTION, // AdjustmentSource
-                                                                      cartextension.AdjustmentTypeEnum.ADJUSTMENT_PERCENTAGE, // AdjustmentType
-                                                                      pctDiscount, // AdjustmentValue
-                                                                      DUMMY_PROMOTION_ID); // PriceAdjustmentCauseId
-            cia.setPriority(1);
-            cia.setAdjustmentAmountScope(cartextension.AdjustmentAmountScopeEnum.TOTAL);
-            cia.setDescription('PromotionCalculator');
-            ci.getCartItemPriceAdjustments().add(cia);
+            if(ci.getProduct2Id().equals(TARGET_PRODUCT_ID)) {
+                Decimal totalPromotionAdjustment = adjustmentCount * promotionAdjustment;
+                CartExtension.CartItemPriceAdjustment cia = new
+                               CartExtension.CartItemPriceAdjustment(cartextension.CartAdjustmentTargetTypeEnum.ITEM, // AdjustmentTargetType
+                                                                     totalPromotionAdjustment, // TotalAmount
+                                                                     cartextension.PriceAdjustmentSourceEnum.PROMOTION, // AdjustmentSource
+                                                                     cartextension.AdjustmentTypeEnum.ADJUSTMENT_AMOUNT, // AdjustmentType
+                                                                     promotionAdjustment, // AdjustmentValue
+                                                                     DUMMY_PROMOTION_ID); // PriceAdjustmentCauseId
+                Decimal totalLineAmount = (ci.getTotalLineAmount() == null) ?
+                                            (ci.getSalesPrice() * ci.getQuantity()) : ci.getTotalLineAmount();
 
-            // Populate TotalPromoAdjustmentAmount for cart-item & update totals based on promotion adjustment
-            ci.setTotalPromoAdjustmentAmount(promotionAdjustment);
-            ci.setTotalAdjustmentAmount(promotionAdjustment);
-            ci.setTotalPriceAfterAllAdjustments(ci.getSalesPrice() - promotionAdjustment);
+                cia.setPriority(1);
+                cia.setAdjustmentAmountScope(cartextension.AdjustmentAmountScopeEnum.TOTAL);
+                cia.setDescription('PromotionCalculator');
+                ci.getCartItemPriceAdjustments().add(cia);
 
+                // Populate TotalPromoAdjustmentAmount for cart-item & update totals based on promotion adjustment
+                ci.setTotalPromoAdjustmentAmount(totalPromotionAdjustment);
+                ci.setTotalAdjustmentAmount(totalPromotionAdjustment);
+                ci.setTotalPriceAfterAllAdjustments(totalLineAmount - totalPromotionAdjustment);
+            } else {
+            	continue;
+            }
         }
     }
 }
