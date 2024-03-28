@@ -17,8 +17,9 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
       // previous CVOs as they have been previously handled by the Cart Calculate API.
       CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
-      for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
-        CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
+      Iterator<CartExtension.CartValidationOutput> cartValidationOutputCollectionIterator = cartValidationOutputCollection.iterator();
+      while (cartValidationOutputCollectionIterator.hasNext()) {
+        CartExtension.CartValidationOutput cvo = cartValidationOutputCollectionIterator.next();
         if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
           cartValidationOutputCollection.remove(cvo);
         }
@@ -34,13 +35,18 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       // The cartItemCollection contains both products and shipping cart items.
       Map<String, CartExtension.CartItem> cartItemById = new Map<String, CartExtension.CartItem>();
       Map<String, CartExtension.CartItem> shippingItemById = new Map<String, CartExtension.CartItem>();
-      for (Integer i = (cartItemCollection.size() - 1); i >= 0; i--) {
-        if (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
-          cartItemById.put(cartItemCollection.get(i).getId(), cartItemCollection.get(i));
-        } else if (cartItemCollection.get(i).getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
+
+      Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
+
+      while (cartItemCollectionIterator.hasNext()) {
+      	CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
+
+        if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
+          cartItemById.put(cartItem.getId(), cartItem);
+        } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
           // Shipping cart items are uniquely identified using delivery group id.
-          CartExtension.CartDeliveryGroup deliveryGroup = cartItemCollection.get(i).getCartDeliveryGroup();
-          shippingItemById.put(deliveryGroup.getId(), cartItemCollection.get(i));
+          CartExtension.CartDeliveryGroup deliveryGroup = cartItem.getCartDeliveryGroup();
+          shippingItemById.put(deliveryGroup.getId(), cartItem);
         }
       }
 
@@ -115,9 +121,9 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
           if (cartItem.getCartTaxes().size() > 0) {
             cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
           }
-          for (Integer i = (cartItem.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
-            CartExtension.CartTaxList cipaTaxes = cartItem.getCartItemPriceAdjustments()
-              .get(i)
+          Iterator<CartExtension.CartItemPriceAdjustment> cartItemPriceAdjustmentsIterator = cartItem.getCartItemPriceAdjustments().iterator();
+          while(cartItemPriceAdjustmentsIterator.hasNext()) {
+            CartExtension.CartTaxList cipaTaxes = cartItemPriceAdjustmentsIterator.next()
               .getCartTaxes();
             if (cipaTaxes.size() > 0) {
               cipaTaxes.remove(cipaTaxes.get(0));
@@ -219,15 +225,16 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       null
       ? new List<CartAdjustment>()
       : taxesFromExternalService.getItemizedPromotionTaxAmounts();
-
-    for (Integer i = (cartItemDto.getCartItemPriceAdjustments().size() - 1); i >= 0; i--) {
-      CartExtension.CartTaxList cartTaxes = cartItemDto.getCartItemPriceAdjustments()
-        .get(i)
+    Iterator<CartExtension.CartItemPriceAdjustment> cartItemPriceAdjustmentsIterator = cartItemDto.getCartItemPriceAdjustments().iterator();
+    while (cartItemPriceAdjustmentsIterator.hasNext()) {
+      CartExtension.CartTaxList cartTaxes = cartItemPriceAdjustmentsIterator.next()
         .getCartTaxes();
-      for (Integer j = (cartTaxes.size() - 1); j >= 0; j--) {
+      Iterator<CartExtension.CartTax> cartTaxesIterator = cartTaxes.iterator();
+      while (cartTaxesIterator.hasNext()) {
+      CartExtension.CartTax cartTax = cartTaxesIterator.next();
         Boolean changedAdjTax = false;
         for (Integer k = (ajustments.size() - 1); k >= 0; k--) {
-          if (cartTaxes.get(j).getAmount() == ajustments.get(k).getAmount())
+          if (cartTax.getAmount() == ajustments.get(k).getAmount())
             changedAdjTax = true;
         }
         if (changedAdjTax == false)
@@ -242,9 +249,11 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     CartExtension.cartItemPriceAdjustmentList cipaList,
     String id
   ) {
-    for (Integer i = (cipaList.size() - 1); i >= 0; i--) {
-      if (String.valueOf(cipaList.get(i).getId()) == id)
-        return cipaList.get(i);
+    Iterator<CartExtension.CartItemPriceAdjustment> cipaIterator = cipaList.iterator();
+    while (cipaIterator.hasNext()) {
+      CartExtension.CartItemPriceAdjustment cipa = cipaIterator.next();
+      if (String.valueOf(cipa.getId()) == id)
+        return cipa;
     }
     return null;
   }
@@ -365,10 +374,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             Double tierAdjustmentTax = (tierAdjustment!=null ? tierAdjustment : 0.00) * multiplier;
 
             CartExtension.CartItemPriceAdjustmentList itemizedPromotions = cartItem.getCartItemPriceAdjustments();
-
+        	Iterator<CartExtension.CartItemPriceAdjustment> itemizedPromotionsIterator = itemizedPromotions.iterator();
             String itemizedPromotionTaxResp = '[';
-            for(Integer i=0; i<itemizedPromotions.size(); i++ ) {
-                CartExtension.CartItemPriceAdjustment itemAdj = itemizedPromotions.get(i);
+            while (itemizedPromotionsIterator.hasNext()) {
+                CartExtension.CartItemPriceAdjustment itemAdj = itemizedPromotionsIterator.next();
                 Double itemTaxAmount = (itemAdj.getTotalAmount()!=null ? itemAdj.getTotalAmount() : 0.00) * multiplier;
                 itemizedPromotionTaxResp = itemizedPromotionTaxResp + '{';
                 itemizedPromotionTaxResp = itemizedPromotionTaxResp + '"id": "' + itemAdj.getId() + '",';
