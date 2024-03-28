@@ -18,16 +18,11 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       // previous CVOs as they have been previously handled by the Cart Calculate API.
       CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
       Iterator<CartExtension.CartValidationOutput> cartValidationOutputCollectionIterator = cartValidationOutputCollection.iterator();
-      List<CartExtension.CartValidationOutput> cvoToRemove = new List<CartExtension.CartValidationOutput>();
       while (cartValidationOutputCollectionIterator.hasNext()) {
         CartExtension.CartValidationOutput cvo = cartValidationOutputCollectionIterator.next();
         if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
-          cvoToRemove.add(cvo);
+          cartValidationOutputCollection.remove(cvo);
         }
-      }
-      // Remove cartValidationOutputs from cartValidationOutputCollection
-      for(CartExtension.CartValidationOutput cvo : cvoToRemove){
-      	cartValidationOutputCollection.remove(cvo);
       }
 
       // There should be one delivery group per cart.
@@ -44,12 +39,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
       Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
 
       while (cartItemCollectionIterator.hasNext()) {
-        CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
+      	CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
 
         if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
-          if (cartItem.getId() != null) {
-          	cartItemById.put(cartItem.getId(), cartItem);
-          }
+          cartItemById.put(cartItem.getId(), cartItem);
         } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
           // Shipping cart items are uniquely identified using delivery group id.
           CartExtension.CartDeliveryGroup deliveryGroup = cartItem.getCartDeliveryGroup();
@@ -381,7 +374,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             Double tierAdjustmentTax = (tierAdjustment!=null ? tierAdjustment : 0.00) * multiplier;
 
             CartExtension.CartItemPriceAdjustmentList itemizedPromotions = cartItem.getCartItemPriceAdjustments();
-            Iterator<CartExtension.CartItemPriceAdjustment> itemizedPromotionsIterator = itemizedPromotions.iterator();
+        	Iterator<CartExtension.CartItemPriceAdjustment> itemizedPromotionsIterator = itemizedPromotions.iterator();
             String itemizedPromotionTaxResp = '[';
             while (itemizedPromotionsIterator.hasNext()) {
                 CartExtension.CartItemPriceAdjustment itemAdj = itemizedPromotionsIterator.next();
@@ -524,4 +517,3 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     }
   }
 }
-
