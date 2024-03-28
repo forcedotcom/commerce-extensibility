@@ -30,9 +30,25 @@ global class PromotionCalculatorSampleTest {
         // Associate qualifying & target items to the Cart and load the cart
         CartExtension.Cart cart = addItemsToCart(cartId, 10, 3);
 
+        // Arrange buyer updated cart item with target
+        List<CartExtension.CartItemChange> changedCartItems = new List<CartExtension.CartItemChange>();
+        Iterator<CartExtension.CartItem> cartItemsIterator = cart.getCartItems().iterator();
+        while (cartItemsIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemsIterator.next();
+            if (cartItem.getProduct2Id() == ID.valueOf(TARGET_PRODUCT_ID)) {
+                changedCartItems.add(
+                new CartExtension.CartItemChange.Builder()
+                .withChangedItem(CartExtension.OptionalCartItem.of(cartItem))
+                .withAdded(true)
+                .build());
+            }
+        }
+        CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails.Builder()
+            .withCartItemChanges(changedCartItems).build();
+
         // Act
         Test.startTest();
-        promotionCalculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        promotionCalculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails)));
         Test.stopTest();
 
         // Assert
@@ -48,7 +64,7 @@ global class PromotionCalculatorSampleTest {
         // Verify CartItem adjustment and total price
 		Assert.areEqual(TOTAL_ADJUSTMENT_AMOUNT, cart.getCartItems().get(1).getTotalPromoAdjustmentAmount());
         Assert.areEqual(TOTAL_ADJUSTMENT_AMOUNT, cart.getCartItems().get(1).getTotalAdjustmentAmount());
-        Assert.areEqual(((TARGET_SALES_PRICE * 3) - TOTAL_ADJUSTMENT_AMOUNT), cart.getCartItems().get(1).getTotalPriceAfterAllAdjustments());
+        Assert.areEqual(((TARGET_SALES_PRICE * 3) + TOTAL_ADJUSTMENT_AMOUNT), cart.getCartItems().get(1).getTotalPriceAfterAllAdjustments());
     }
 
     /**
@@ -63,9 +79,26 @@ global class PromotionCalculatorSampleTest {
         // Associate qualifying & target items to the Cart and load the cart
         CartExtension.Cart cart = addItemsToCart(cartId, 4, 1);
 
+        // Arrange buyer updated cart item with target
+        List<CartExtension.CartItemChange> changedCartItems = new List<CartExtension.CartItemChange>();
+        Iterator<CartExtension.CartItem> cartItemsIterator = cart.getCartItems().iterator();
+        while (cartItemsIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemsIterator.next();
+            if (cartItem.getProduct2Id() == ID.valueOf(TARGET_PRODUCT_ID)) {
+                changedCartItems.add(
+                new CartExtension.CartItemChange.Builder()
+                .withChangedItem(CartExtension.OptionalCartItem.of(cartItem))
+                .withAdded(true)
+                .build());
+            }
+        }
+        CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails.Builder()
+            .withCartItemChanges(changedCartItems).build();
+
+
         // Act
         Test.startTest();
-        promotionCalculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        promotionCalculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails)));
         Test.stopTest();
 
         // Assert

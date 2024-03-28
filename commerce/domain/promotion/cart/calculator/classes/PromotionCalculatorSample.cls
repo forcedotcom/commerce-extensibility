@@ -12,20 +12,42 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
     public static final String DUMMY_PROMOTION_ID = '0c8xx00000004JlAAI';
     private static final String QUALIFIER_PRODUCT_ID = '01txx0000006lmmAAA';
     private static final String TARGET_PRODUCT_ID = '01txx0000006lmuAAA';
-    private static final Decimal PROMOTION_ADJUSTMENT = -2;
-    private static final Decimal QUALIFIER_QUANTITY = 5;
+    private static final Integer PROMOTION_ADJUSTMENT = -2;
+    private static final Integer QUALIFIER_QUANTITY = 5;
 
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
-        cartextension.Cart cart = request.getCart();
-        resetAllAdjustments(cart);
-        evaluatePromotionForCartItems(cart);
+        validateBuyerActionDetailsAndEvaluatePromotion(request.getCart(), request.getOptionalBuyerActionDetails());
+    }
+
+	/**
+	 * @description Evaluate promotion for the cart items if qualifier and/or target products part of changed elements in cart.
+	 * @param cart Holds details about cart
+	 * @param optionalBuyerActionDetails The latest set of changes applied to the Cart by the Buyer
+	 */
+    private void validateBuyerActionDetailsAndEvaluatePromotion(cartextension.Cart cart, cartextension.OptionalBuyerActionDetails optionalBuyerActionDetails) {
+        if (optionalBuyerActionDetails.isPresent() || !optionalBuyerActionDetails.get().isCheckoutStarted()) {
+            List<CartExtension.CartItemChange> cartItemChanges = optionalBuyerActionDetails.get().getCartItemChanges();
+
+            for (CartExtension.CartItemChange cartItemChange : cartItemChanges) {
+                 CartExtension.OptionalCartItem optionalCartItem = cartItemChange.getChangedItem();
+                 if (optionalCartItem.isPresent()) {
+                     CartExtension.CartItem cartItem = optionalCartItem.get();
+                     if (cartItem.getProduct2Id() == ID.valueOf(QUALIFIER_PRODUCT_ID) ||
+                         cartItem.getProduct2Id() == ID.valueOf(TARGET_PRODUCT_ID)) {
+                     		resetAllAdjustments(cart);
+                        	evaluatePromotionForCartItems(cart);
+                        	break;
+                     }
+                 }
+            }
+        }
     }
 
     /**
      * @description Remove cart & cart-item level adjustments, cart validation outputs.
      * @param cart Holds details about cart
      */
-    public static void resetAllAdjustments(cartextension.Cart cart) {
+    private static void resetAllAdjustments(cartextension.Cart cart) {
 
         // Remove all cart-level adjustments
         Iterator<CartExtension.CartAdjustmentGroup> cagIter = cart.getCartAdjustmentGroups().iterator();
@@ -52,7 +74,7 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
                 ciaToRemove.add(ciaIter.next());
             }
             for(CartExtension.CartItemPriceAdjustment cia : ciaToRemove) {
-                ci.getCartItemPriceAdjustments().remove(cia);
+                 ci.getCartItemPriceAdjustments().remove(cia);
             }
         }
 
@@ -68,6 +90,8 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
             }
         }
     }
+
+
 
     /**
      * @description Evaluate BOGO promotion (Buy 5 items of qualifying product, get $2 off a unit of target product,
@@ -137,7 +161,7 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
                 // Populate TotalPromoAdjustmentAmount for cart-item & update totals based on promotion adjustment
                 ci.setTotalPromoAdjustmentAmount(totalPromotionAdjustment);
                 ci.setTotalAdjustmentAmount(totalPromotionAdjustment);
-                ci.setTotalPriceAfterAllAdjustments(totalLineAmount - totalPromotionAdjustment);
+                ci.setTotalPriceAfterAllAdjustments(totalLineAmount + totalPromotionAdjustment);
             } else {
             	continue;
             }
