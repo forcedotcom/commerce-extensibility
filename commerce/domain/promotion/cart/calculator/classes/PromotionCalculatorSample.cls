@@ -20,26 +20,30 @@ public with sharing class PromotionCalculatorSample extends CartExtension.Promot
     }
 
 	/**
-	 * @description Evaluate promotion for the cart items if qualifier and/or target products part of changed elements in cart.
-	 * @param cart Holds details about cart
-	 * @param optionalBuyerActionDetails The latest set of changes applied to the Cart by the Buyer
+	 * @description Evaluate promotion for cart when OptionalBuyerActionDetails not present or
+	 * OptionalBuyerActionDetails includes qualifying/target product.
+	 * @param cart In memory representation of the Cart
+     * @param optionalBuyerActionDetails The latest set of changes applied to the Cart by the Buyer
 	 */
     private void validateBuyerActionDetailsAndEvaluatePromotion(cartextension.Cart cart, cartextension.OptionalBuyerActionDetails optionalBuyerActionDetails) {
-        if (optionalBuyerActionDetails.isPresent() || !optionalBuyerActionDetails.get().isCheckoutStarted()) {
-            List<CartExtension.CartItemChange> cartItemChanges = optionalBuyerActionDetails.get().getCartItemChanges();
+        if (!optionalBuyerActionDetails.isPresent() || optionalBuyerActionDetails.get().isCheckoutStarted()) {
+            resetAllAdjustments(cart);
+            evaluatePromotionForCartItems(cart);
+            return;
+        }
 
-            for (CartExtension.CartItemChange cartItemChange : cartItemChanges) {
-                 CartExtension.OptionalCartItem optionalCartItem = cartItemChange.getChangedItem();
-                 if (optionalCartItem.isPresent()) {
-                     CartExtension.CartItem cartItem = optionalCartItem.get();
-                     if (cartItem.getProduct2Id() == ID.valueOf(QUALIFIER_PRODUCT_ID) ||
-                         cartItem.getProduct2Id() == ID.valueOf(TARGET_PRODUCT_ID)) {
-                     		resetAllAdjustments(cart);
-                        	evaluatePromotionForCartItems(cart);
-                        	break;
-                     }
-                 }
-            }
+        List<CartExtension.CartItemChange> cartItemChanges = optionalBuyerActionDetails.get().getCartItemChanges();
+        for (CartExtension.CartItemChange cartItemChange : cartItemChanges) {
+             CartExtension.OptionalCartItem optionalCartItem = cartItemChange.getChangedItem();
+               	if (optionalCartItem.isPresent()) {
+                    CartExtension.CartItem cartItem = optionalCartItem.get();
+                       	if (cartItem.getProduct2Id() == ID.valueOf(QUALIFIER_PRODUCT_ID) ||
+                          	cartItem.getProduct2Id() == ID.valueOf(TARGET_PRODUCT_ID)) {
+                        		resetAllAdjustments(cart);
+                              	evaluatePromotionForCartItems(cart);
+                               	break;
+                       	}
+                }
         }
     }
 

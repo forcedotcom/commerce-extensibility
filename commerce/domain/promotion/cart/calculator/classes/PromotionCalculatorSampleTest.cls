@@ -71,7 +71,7 @@ global class PromotionCalculatorSampleTest {
      * @description Verify Promotion is not applied when cart does not include enough qualifying or target items.
      */
     @IsTest
-    public static void testPromotionAndPriceAdjustments_WithOutQualifierAndTargetItems() {
+    public static void testPromotionAndPriceAdjustments_WithInsufficientQualifierAndTargetItems() {
         // Arrange
         // Create a Cart with CHECKOUT status
         Id cartId = createCartWithSpecifiedStatus(CartExtension.CartStatusEnum.CHECKOUT);
@@ -108,6 +108,39 @@ global class PromotionCalculatorSampleTest {
         // Verify that the CartItem has 0 price adjustments.
         Assert.areEqual(0, cart.getCartItems().get(0).getCartItemPriceAdjustments().size());
         Assert.areEqual(0, cart.getCartItems().get(1).getCartItemPriceAdjustments().size());
+    }
+
+    /**
+     * @description Verify Promotion is correctly applied on cart item w/o optional buyer action details.
+     */
+    @IsTest
+    public static void testPromotionAndPriceAdjustments_WithOutBuyerActionDetails() {
+        // Arrange
+        // Create a Cart with CHECKOUT status
+        Id cartId = createCartWithSpecifiedStatus(CartExtension.CartStatusEnum.CHECKOUT);
+
+        // Associate qualifying & target items to the Cart and load the cart
+        CartExtension.Cart cart = addItemsToCart(cartId, 5, 2);
+
+        // Act
+        Test.startTest();
+        promotionCalculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        Test.stopTest();
+
+        // Assert
+        // Verify that we have 2 CartItems
+        Assert.areEqual(2, cart.getCartItems().size());
+
+        // Verify that the CartItem has 1 price adjustment with correct adjustment type and value
+        Assert.areEqual(1, cart.getCartItems().get(1).getCartItemPriceAdjustments().size());
+        Assert.areEqual(Cartextension.AdjustmentTypeEnum.ADJUSTMENT_AMOUNT, cart.getCartItems().get(1).getCartItemPriceAdjustments().get(0).getAdjustmentType());
+        Assert.areEqual(DISCOUNT_VALUE, cart.getCartItems().get(1).getCartItemPriceAdjustments().get(0).getAdjustmentValue());
+        Assert.areEqual(DISCOUNT_VALUE, cart.getCartItems().get(1).getCartItemPriceAdjustments().get(0).getTotalAmount());
+
+        // Verify CartItem adjustment and total price
+		Assert.areEqual(DISCOUNT_VALUE, cart.getCartItems().get(1).getTotalPromoAdjustmentAmount());
+        Assert.areEqual(DISCOUNT_VALUE, cart.getCartItems().get(1).getTotalAdjustmentAmount());
+        Assert.areEqual(((TARGET_SALES_PRICE * 2) + DISCOUNT_VALUE), cart.getCartItems().get(1).getTotalPriceAfterAllAdjustments());
     }
 
     /**
