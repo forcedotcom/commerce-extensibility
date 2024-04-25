@@ -65,7 +65,7 @@ public class EstimatedActualPricingCalculator extends CartExtension.PricingCartC
         if (pricingDataMap == Null) {
             // No data returned means there is an issue with underlying 3rd party service. Populate generic error message for the Buyer.
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                                                        CartExtension.CartValidationOutputTypeEnum.SHIPPING,
+                                                        CartExtension.CartValidationOutputTypeEnum.PRICING,
                                                         CartExtension.CartValidationOutputLevelEnum.ERROR);
             String errorMessage = getGenericErrorMessage();
             cvo.setMessage(errorMessage);
