@@ -20,16 +20,89 @@ public class TaxCartCalculatorSampleTest {
     private static final Decimal ACTUAL_PRICE_SKU3 = 300.00;
 
     @IsTest
-    static void testCalculate_NoExternalService() {
-        CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
+    static void testCalculate_withEmptyDeliveryAddress() {
+        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
 
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
 
         // Call the calculate method
         TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
         Test.startTest();
         calculator.calculate(request);
         Test.stopTest();
+        CartExtension.Cart cart = request.getCart();
+        CartExtension.CartItemList cartItemCollection = cart.getCartItems();
+        Assert.areEqual(CART_ITEM1_NAME, cartItemCollection.get(0).getName());
+        CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
+        Assert.areEqual(1, cartValidationOutputCollection.size());
+        Assert.areEqual('There was a problem with delivery address in request.', cartValidationOutputCollection.get(0).getMessage());
+    }
+
+    @IsTest
+    static void testCalculate_withZeroPrice() {
+        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum.ACTIVE);
+
+        CartExtension.CartDeliveryGroup deliveryGroup = cartReq.getCartDeliveryGroups().get(0);
+        deliveryGroup.setDeliverToStreet('newStreet');
+        deliveryGroup.setDeliverToCity('newCity');
+        deliveryGroup.setDeliverToState('Washington');
+        deliveryGroup.setDeliverToCountry('US');
+        deliveryGroup.setDeliverToPostalCode('987654');
+        deliveryGroup.setDeliverToLatitude(48.1);
+        deliveryGroup.setDeliverToLongitude(33.2);
+        deliveryGroup.setDeliverToGeocodeAccuracy(null);
+
+
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
+
+
+        TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
+        Test.startTest();
+        calculator.calculate(request);
+        Test.stopTest();
+
+        CartExtension.Cart cart = request.getCart();
+        CartExtension.CartItemList cartItemCollection = cart.getCartItems();
+        Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
+		while (cartItemCollectionIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
+            Assert.areEqual(0.00, cartItem.getNetUnitPrice());
+            Assert.areEqual(0.00, cartItem.getGrossUnitPrice());
+        }
+    }
+
+    @IsTest
+    static void testCalculate_withDeliveryAddress() {
+        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum.ACTIVE);
+
+        CartExtension.CartDeliveryGroup deliveryGroup = cartReq.getCartDeliveryGroups().get(0);
+        deliveryGroup.setDeliverToStreet('newStreet');
+        deliveryGroup.setDeliverToCity('newCity');
+        deliveryGroup.setDeliverToState('Washington');
+        deliveryGroup.setDeliverToCountry('US');
+        deliveryGroup.setDeliverToPostalCode('987654');
+        deliveryGroup.setDeliverToLatitude(48.1);
+        deliveryGroup.setDeliverToLongitude(33.2);
+        deliveryGroup.setDeliverToGeocodeAccuracy(null);
+
+        cartReq.getCartItems().get(0).setTotalPrice(100.00);
+
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
+
+
+        TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
+        Test.startTest();
+        calculator.calculate(request);
+        Test.stopTest();
+
+        CartExtension.Cart cart = request.getCart();
+        CartExtension.CartItemList cartItemCollection = cart.getCartItems();
+        Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
+		while (cartItemCollectionIterator.hasNext()) {
+            CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
+            Assert.areEqual(100.00, cartItem.getNetUnitPrice());
+            Assert.areEqual(108.00, cartItem.getGrossUnitPrice());
+        }
     }
 
     /**
@@ -93,4 +166,27 @@ public class TaxCartCalculatorSampleTest {
         arrangeThreeCartItems(cartId);
         return CartExtension.CartTestUtil.getCart(cartId);
     }
+
+    private static CartExtension.Cart arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum cartStatus) {
+        Id cartId = arrangeCartWithSpecifiedStatus(cartStatus);
+        arrangeCartItemsWithDeliveryAddress(cartId);
+        return CartExtension.CartTestUtil.getCart(cartId);
+    }
+
+    private static List<ID> arrangeCartItemsWithDeliveryAddress(ID cartId) {
+        CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(Name = DELIVERYGROUP_NAME, CartId = cartId);
+        insert deliveryGroup;
+
+        CartItem cartItem1 = new CartItem(
+                Name = CART_ITEM1_NAME,
+                CartId = cartId,
+                CartDeliveryGroupId = deliveryGroup.Id,
+                Quantity = 1,
+                SKU = SKU1_NAME,
+                Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
+        insert cartItem1;
+
+        return new List<ID>{cartItem1.Id};
+    }
+
 }

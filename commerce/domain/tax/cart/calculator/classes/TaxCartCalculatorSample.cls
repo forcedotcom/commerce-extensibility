@@ -1,4 +1,5 @@
-// This class facilitates tax calculation either by invoking an external service or by implementing the tax calculation logic internally. The resulting tax values and adjustments are then stored in a Cart Data Transfer Object (DTO), references to both code implementations provided
+// This class facilitates tax calculation either by invoking an external service or by implementing the tax calculation logic internally.
+// The resulting tax values and adjustments are then stored in a Cart Data Transfer Object (DTO), references to both code implementations provided
 // For a tax calculator extension to be processed by the checkout flow, you must implement the CartExtension.TaxCartCalculator class.
 
 public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
@@ -10,17 +11,21 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 	private static Boolean useExternalService = false;
 
 	public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
-		CartExtension.CartValidationOutputList cartValidationOutputCollection = null;
+		CartExtension.Cart cart = request.getCart();
+		CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
 		try{
 			Integer cartItemIdSeq = 0;
-			CartExtension.Cart cart = request.getCart();
 			if (!isValidCart(cart)){
+                CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+                CartExtension.CartValidationOutputTypeEnum.TAXES,
+                CartExtension.CartValidationOutputLevelEnum.ERROR);
+                cvo.setMessage('There was a problem with delivery address in request.');
+                cartValidationOutputCollection.add(cvo);
 				return;
 			}
 
     		// Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
     		// previous CVOs as they have been previously handled by the Cart Calculate API.
-    		cartValidationOutputCollection = cart.getCartValidationOutputs();
     		for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
             	CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
             	if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
@@ -78,11 +83,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
             // TODO need to add cvo in case of tax data is null
             if (taxData == null) {
-            	// add cvo
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
                 CartExtension.CartValidationOutputTypeEnum.TAXES,
                 CartExtension.CartValidationOutputLevelEnum.ERROR);
-                cvo.setMessage('No tax rates configured for this location.');
+                cvo.setMessage('No tax rates configured.');
                 cartValidationOutputCollection.add(cvo);
                 return;
             }
@@ -93,7 +97,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             for (String cartItemId : cartItemByIdMap.keySet()) {
             	TaxData taxDetails = taxData.get(cartItemId);
             	if (taxDetails == null) {
-            		// add cvo
             		CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
             		CartExtension.CartValidationOutputTypeEnum.TAXES,
             		CartExtension.CartValidationOutputLevelEnum.INFO);
@@ -192,11 +195,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 }
             }
 		} catch(Exception e){
-            // add cvo
             CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
             CartExtension.CartValidationOutputTypeEnum.TAXES,
             CartExtension.CartValidationOutputLevelEnum.ERROR);
-            cvo.setMessage('There was a problem with the request.');
+            cvo.setMessage('There was a problem. ' + e.getMessage());
             cartValidationOutputCollection.add(cvo);
             return;
 		}
@@ -237,7 +239,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     }
 
     private Map<String, TaxData> getTaxesFromStaticResponse(Map<String, CartExtension.CartItem> cartItemsMap, String state, String country, CartExtension.TaxLocaleTypeEnum taxType) {
-
         Double taxRate = 0.15;
         String responseJson = '{';
         for (String key : cartItemsMap.keySet()) {
@@ -363,7 +364,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         Iterator<CartExtension.CartItemPriceAdjustment> cipaIterator = cipaList.iterator();
         while (cipaIterator.hasNext()) {
         	CartExtension.CartItemPriceAdjustment cipa = cipaIterator.next();
-        	if (String.valueOf(cipa.getId()) == id)
+        	if (cipa.getId() != null && String.valueOf(cipa.getId()) == id)
         		return cipa;
         	}
         return null;
