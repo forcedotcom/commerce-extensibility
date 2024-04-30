@@ -138,15 +138,18 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
       txnResponse.getTotalProductAmount() + txnResponse.getTotalAdjustmentAmount()
     );
 
+    /**
+     * Override success/failure of a product easily by adding an error message to the product.
+     * Here is a sample code demonstrating how to set error messages for products.
+     * We are failing the first product in the response.
+     * 
     if (!txnItemCollection.isEmpty()) {
-      // Override success/failure of a product easily by adding an error message to the product.
-      // Here is a sample code demonstrating how to set error messages for products.
-      // We are failing the first product in the response.
-      
-      // String customErrorMessage = 'We no longer sell this particular product.';
-      // String localizedErrorMessage = 'Wir verkaufen dieses spezielle Produkt nicht mehr.';
-      // txnItemCollection.get(0).setError(customErrorMessage, localizedErrorMessage);
+      String customErrorMessage = 'We no longer sell this particular product.';
+      String localizedErrorMessage = 'Wir verkaufen dieses spezielle Produkt nicht mehr.';
+      txnItemCollection.get(0).setError(customErrorMessage, localizedErrorMessage);
     }
+	  */
+
     return txnResponse;
   }
 
