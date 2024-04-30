@@ -100,6 +100,9 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
   // amount, total adjustment amount and total amount. Item level - line id, product id, unit price,
   // list price, unit pricebook entry id, unit adjustment amount, total line amount, total adjustment
   // amount, total price, and total list price.
+  //
+  // Caution: If you're overriding fields containing Salesforce IDs, ensure that they are valid IDs. Otherwise,
+  // subsequent operations may fail unexpectedly.
   public override commercestorepricing.TransactionalPricingResponse processTransactionalPrice(
     commercestorepricing.TransactionalPricingRequest request2
   ) {
@@ -142,13 +145,14 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
      * Override success/failure of a product easily by adding an error message to the product.
      * Here is a sample code demonstrating how to set error messages for products.
      * We are failing the first product in the response.
+     * Warning: Uncommenting the code below will cause cart operations to fail.
      * 
     if (!txnItemCollection.isEmpty()) {
       String customErrorMessage = 'We no longer sell this particular product.';
       String localizedErrorMessage = 'Wir verkaufen dieses spezielle Produkt nicht mehr.';
       txnItemCollection.get(0).setError(customErrorMessage, localizedErrorMessage);
     }
-	  */
+    */
 
     return txnResponse;
   }
