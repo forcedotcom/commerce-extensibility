@@ -146,13 +146,12 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
      * Here is a sample code demonstrating how to set error messages for products.
      * We are failing the first product in the response.
      * Warning: Uncommenting the code below will cause cart operations to fail.
-     * 
-    if (!txnItemCollection.isEmpty()) {
-      String customErrorMessage = 'We no longer sell this particular product.';
-      String localizedErrorMessage = 'Wir verkaufen dieses spezielle Produkt nicht mehr.';
-      txnItemCollection.get(0).setError(customErrorMessage, localizedErrorMessage);
-    }
-    */
+     */
+    // if (!txnItemCollection.isEmpty()) {
+    //  String customErrorMessage = 'We no longer sell this particular product.';
+    //  String localizedErrorMessage = 'Wir verkaufen dieses spezielle Produkt nicht mehr.';
+    //  txnItemCollection.get(0).setError(customErrorMessage, localizedErrorMessage);
+    // }
 
     return txnResponse;
   }
