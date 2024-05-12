@@ -21,28 +21,28 @@ public class TaxCartCalculatorSampleTest {
 
     @IsTest
     static void testCalculate_withEmptyDeliveryAddress() {
-        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
-
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
-
-        // Call the calculate method
+    	// Arrange
+        CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
+
+        // Act
         Test.startTest();
         calculator.calculate(request);
         Test.stopTest();
-        CartExtension.Cart cart = request.getCart();
+
+        // Assert
+        cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
         Assert.areEqual(CART_ITEM1_NAME, cartItemCollection.get(0).getName());
-        CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
-        Assert.areEqual(1, cartValidationOutputCollection.size());
-        Assert.areEqual('There was a problem with delivery address in request.', cartValidationOutputCollection.get(0).getMessage());
+        Assert.areEqual(0, cartItemCollection.get(0).getCartTaxes().size());
     }
 
     @IsTest
     static void testCalculate_withZeroPrice() {
-        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum.ACTIVE);
-
-        CartExtension.CartDeliveryGroup deliveryGroup = cartReq.getCartDeliveryGroups().get(0);
+    	// Arrange
+        CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatus(CartExtension.CartStatusEnum.ACTIVE);
+        CartExtension.CartDeliveryGroup deliveryGroup = cart.getCartDeliveryGroups().get(0);
         deliveryGroup.setDeliverToStreet('newStreet');
         deliveryGroup.setDeliverToCity('newCity');
         deliveryGroup.setDeliverToState('Washington');
@@ -51,20 +51,19 @@ public class TaxCartCalculatorSampleTest {
         deliveryGroup.setDeliverToLatitude(48.1);
         deliveryGroup.setDeliverToLongitude(33.2);
         deliveryGroup.setDeliverToGeocodeAccuracy(null);
-
-
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
-
-
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
+
+        // Act
         Test.startTest();
         calculator.calculate(request);
         Test.stopTest();
 
-        CartExtension.Cart cart = request.getCart();
+		// Assert
+        cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
         Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
-		while (cartItemCollectionIterator.hasNext()) {
+        while (cartItemCollectionIterator.hasNext()) {
             CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
             Assert.areEqual(0.00, cartItem.getNetUnitPrice());
             Assert.areEqual(0.00, cartItem.getGrossUnitPrice());
@@ -73,9 +72,9 @@ public class TaxCartCalculatorSampleTest {
 
     @IsTest
     static void testCalculate_withDeliveryAddress() {
-        CartExtension.Cart cartReq = arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum.ACTIVE);
-
-        CartExtension.CartDeliveryGroup deliveryGroup = cartReq.getCartDeliveryGroups().get(0);
+    	// Arrange
+        CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatus(CartExtension.CartStatusEnum.ACTIVE);
+        CartExtension.CartDeliveryGroup deliveryGroup = cart.getCartDeliveryGroups().get(0);
         deliveryGroup.setDeliverToStreet('newStreet');
         deliveryGroup.setDeliverToCity('newCity');
         deliveryGroup.setDeliverToState('Washington');
@@ -84,18 +83,17 @@ public class TaxCartCalculatorSampleTest {
         deliveryGroup.setDeliverToLatitude(48.1);
         deliveryGroup.setDeliverToLongitude(33.2);
         deliveryGroup.setDeliverToGeocodeAccuracy(null);
-
-        cartReq.getCartItems().get(0).setTotalPrice(100.00);
-
-        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cartReq, CartExtension.OptionalBuyerActionDetails.empty());
-
-
+        cart.getCartItems().get(0).setTotalPrice(100.00);
+        CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
+
+        // Act
         Test.startTest();
         calculator.calculate(request);
         Test.stopTest();
 
-        CartExtension.Cart cart = request.getCart();
+        // Assert
+        cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
         Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
 		while (cartItemCollectionIterator.hasNext()) {
@@ -167,7 +165,7 @@ public class TaxCartCalculatorSampleTest {
         return CartExtension.CartTestUtil.getCart(cartId);
     }
 
-    private static CartExtension.Cart arrangeAndLoadCartWithSpecifiedStatusAndDeliveryAddress(CartExtension.CartStatusEnum cartStatus) {
+    private static CartExtension.Cart arrangeAndLoadCartWithSpecifiedStatus(CartExtension.CartStatusEnum cartStatus) {
         Id cartId = arrangeCartWithSpecifiedStatus(cartStatus);
         arrangeCartItemsWithDeliveryAddress(cartId);
         return CartExtension.CartTestUtil.getCart(cartId);

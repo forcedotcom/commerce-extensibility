@@ -1,39 +1,33 @@
 // This class facilitates tax calculation either by invoking an external service or by implementing the tax calculation logic internally.
-// The resulting tax values and adjustments are then stored in a Cart Data Transfer Object (DTO), references to both code implementations provided
+// The resulting tax values and adjustments are then stored in a Cart Data Transfer Object (DTO), references to both code implementations provided.
+// This apex class will only consider first delivery group for calculating taxes though multiple delivery groups associated with cart
 // For a tax calculator extension to be processed by the checkout flow, you must implement the CartExtension.TaxCartCalculator class.
 
 public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
-	// You MUST change this to be your service or you must launch your own Third Party Service and add the host in Setup | Security | Remote site settings.
-	private static String externalTaxHost = 'https://example.com';
+    // You MUST change this to be your service or you must launch your own Third Party Service and add the host in Setup | Security | Remote site settings.
+    private static String externalTaxHost = 'https://example.com';
 
-	// You MUST change the useExternalService to True if you want to use the Third Party Service.
-	private static Boolean useExternalService = false;
+    // You MUST change the useExternalService to True if you want to use the Third Party Service.
+    private static Boolean useExternalService = false;
 
-	public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
-		CartExtension.Cart cart = request.getCart();
-		CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
-		try{
+    public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
+        CartExtension.Cart cart = request.getCart();
+        CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
+        try{
+            // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
+            // previous CVOs as they have been previously handled by the Cart Calculate API.
+            for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
+                CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
+                if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
+                    cartValidationOutputCollection.remove(cvo);
+                }
+            }
 			Integer cartItemIdSeq = 0;
 			if (!isValidCart(cart)){
-                CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                CartExtension.CartValidationOutputTypeEnum.TAXES,
-                CartExtension.CartValidationOutputLevelEnum.ERROR);
-                cvo.setMessage('There was a problem with delivery address in request.');
-                cartValidationOutputCollection.add(cvo);
 				return;
 			}
 
-    		// Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
-    		// previous CVOs as they have been previously handled by the Cart Calculate API.
-    		for (Integer i = (cartValidationOutputCollection.size() - 1); i >= 0; i--) {
-            	CartExtension.CartValidationOutput cvo = cartValidationOutputCollection.get(i);
-            	if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
-            		cartValidationOutputCollection.remove(cvo);
-            	}
-            }
-
-            // There should be one delivery group per cart.
 			CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
 			CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
