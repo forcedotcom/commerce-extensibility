@@ -23,13 +23,13 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                     cartValidationOutputCollection.remove(cvo);
                 }
             }
-			Integer cartItemIdSeq = 0;
-			if (!isValidCart(cart)){
-				return;
-			}
+            Integer cartItemIdSeq = 0;
+            if (!isValidCart(cart)){
+            	return;
+            }
 
-			CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
-			CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
+            CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
+            CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(0);
 
             // Map cart ID to cart item with type Product.
             CartExtension.CartItemList cartItemCollection = cart.getCartItems();
@@ -120,14 +120,14 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                     if (cartItem.getCartTaxes().size() > 0) {
                     	cartItem.getCartTaxes().remove(cartItem.getCartTaxes().get(0));
                     }
-					Iterator<CartExtension.CartItemPriceAdjustment> cartItemPriceAdjustmentsIterator = cartItem.getCartItemPriceAdjustments().iterator();
-					while(cartItemPriceAdjustmentsIterator.hasNext()) {
-						CartExtension.CartTaxList cipaTaxes = cartItemPriceAdjustmentsIterator.next().getCartTaxes();
-						if (cipaTaxes.size() > 0) {
-							cipaTaxes.remove(cipaTaxes.get(0));
-						}
-					}
-					isCartItemModified = true;
+                    Iterator<CartExtension.CartItemPriceAdjustment> cartItemPriceAdjustmentsIterator = cartItem.getCartItemPriceAdjustments().iterator();
+                    while(cartItemPriceAdjustmentsIterator.hasNext()) {
+                    	CartExtension.CartTaxList cipaTaxes = cartItemPriceAdjustmentsIterator.next().getCartTaxes();
+                    	if (cipaTaxes.size() > 0) {
+                    		cipaTaxes.remove(cipaTaxes.get(0));
+                    	}
+                    }
+                    isCartItemModified = true;
                 }
 
                 // If there are no existing cart tax entries in the cart item that indicates cart item was
@@ -146,23 +146,23 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                     cartTax.setTaxRate(String.valueOf(taxDetailsToCartId.getRate()));
                     cartTaxCollection.add(cartTax);
 
-					// Add adjustment taxes to cartItemAdjustments of cartItem and create CartTaxDto entries
-					// for all promotion adjustments.
+                    // Add adjustment taxes to cartItemAdjustments of cartItem and create CartTaxDto entries
+                    // for all promotion adjustments.
                     if (taxDetailsToCartId.getItemizedPromotionTaxAmounts() != null &&
                     	!(taxDetailsToCartId.getItemizedPromotionTaxAmounts().isEmpty())){
                     	for (CartAdjustment cipaTax : taxDetailsToCartId.getItemizedPromotionTaxAmounts()) {
                     		CartExtension.CartTax promoTax = new CartExtension.CartTax(
                     		CartExtension.TaxTypeEnum.ESTIMATED, cipaTax.getAmount(), taxDetailsToCartId.getTaxName());
-                            promoTax.setTaxRate(String.valueOf(taxDetailsToCartId.getRate()));
-                            CartExtension.cartItemPriceAdjustment adj = getAdjustmentById(
-                            									cartItem.getCartItemPriceAdjustments(), cipaTax.getId());
-                    		if (adj != null) {
-                    			adj.getCartTaxes().add(promoTax);
-							}
-						}
-					}
-				}
-			}
+                    		promoTax.setTaxRate(String.valueOf(taxDetailsToCartId.getRate()));
+                    		CartExtension.cartItemPriceAdjustment adj = getAdjustmentById(
+                    											cartItem.getCartItemPriceAdjustments(), cipaTax.getId());
+                    	    if (adj != null) {
+                    	    	adj.getCartTaxes().add(promoTax);
+                    	    }
+                    	}
+                   }
+                }
+            }
 
             // If there are shipping items, add tax for them as well
             for (String cartItemId : taxDataShippingItems.keySet()) {
@@ -188,16 +188,15 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                     cartTaxCollection.add(cartTax);
                 }
             }
-		} catch(Exception e){
-            CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-            CartExtension.CartValidationOutputTypeEnum.TAXES,
-            CartExtension.CartValidationOutputLevelEnum.ERROR);
-            cvo.setMessage('There was a problem. ' + e.getMessage());
-            cartValidationOutputCollection.add(cvo);
-            return;
-		}
-
-	}
+        } catch(Exception e){
+        	CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+        	CartExtension.CartValidationOutputTypeEnum.TAXES,
+        	CartExtension.CartValidationOutputLevelEnum.ERROR);
+        	cvo.setMessage('There was a problem. ' + e.getMessage());
+        	cartValidationOutputCollection.add(cvo);
+        	return;
+        }
+    }
 
     // This simulates a call to an external tax service. Change this function based on your external service.
     // Transform tax data returned from service into cart ID to TaxData map.

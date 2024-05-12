@@ -59,7 +59,7 @@ public class TaxCartCalculatorSampleTest {
         calculator.calculate(request);
         Test.stopTest();
 
-		// Assert
+        // Assert
         cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
         Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
@@ -96,7 +96,7 @@ public class TaxCartCalculatorSampleTest {
         cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
         Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
-		while (cartItemCollectionIterator.hasNext()) {
+        while (cartItemCollectionIterator.hasNext()) {
             CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
             Assert.areEqual(100.00, cartItem.getNetUnitPrice());
             Assert.areEqual(108.00, cartItem.getGrossUnitPrice());
