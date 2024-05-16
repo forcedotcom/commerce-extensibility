@@ -24,6 +24,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 }
             }
             Integer cartItemIdSeq = 0;
+            Integer deliveryGroupIdSeq = 0;
             if (!isValidCart(cart)){
             	return;
             }
@@ -46,17 +47,18 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
                 	String cartItemId = (cartItem.getId() == null) ? String.valueOf(++cartItemIdSeq) : cartItem.getId();
                 	cartItemByIdMap.put(cartItemId, cartItem);
-                } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
+                } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) { // for every delivery group there will be only one cart item with type shipping charge
                 	// Shipping cart items are uniquely identified using delivery group id.
                 	CartExtension.CartDeliveryGroup deliveryGroup = cartItem.getCartDeliveryGroup();
-                	chargeItemByDeliveryGroupIdMap.put(deliveryGroup.getId(), cartItem);
+                	String deliveryGroupId = (deliveryGroup.getId() == null) ? String.valueOf(++deliveryGroupIdSeq) : deliveryGroup.getId();
+                	chargeItemByDeliveryGroupIdMap.put(deliveryGroupId, cartItem);
                 }
             }
 
             Map<String, TaxData> taxData = null;
             Map<String, TaxData> taxDataShippingItems = null;
             if(useExternalService){
-				// Get the tax rates and tax amounts from an external service for all given products and its adjustments.
+                // Get the tax rates and tax amounts from an external service for all given products and its adjustments.
                 taxData = getTaxesFromExternalService(
                 cartItemByIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
@@ -64,7 +66,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 taxDataShippingItems = getTaxesFromExternalService(
                 chargeItemByDeliveryGroupIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
-
             } else{
                 taxData = getTaxesFromStaticResponse(
                 cartItemByIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
@@ -75,12 +76,11 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
             }
 
-            // TODO need to add cvo in case of tax data is null
-            if (taxData == null) {
+            if (taxData == null || taxData.size() == 0) {
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
                 CartExtension.CartValidationOutputTypeEnum.TAXES,
                 CartExtension.CartValidationOutputLevelEnum.ERROR);
-                cvo.setMessage('No tax rates configured.');
+                cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
                 cartValidationOutputCollection.add(cvo);
                 return;
             }
@@ -93,10 +93,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             	if (taxDetails == null) {
             		CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
             		CartExtension.CartValidationOutputTypeEnum.TAXES,
-            		CartExtension.CartValidationOutputLevelEnum.INFO);
-            		cvo.setMessage('No tax rates configured for this location.');
+            		CartExtension.CartValidationOutputLevelEnum.ERROR);
+            		cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
             		cartValidationOutputCollection.add(cvo);
-            		isCvoPresent = true;  // need to take an call on this we can exit for first time only
+            		isCvoPresent = true;
             	}
             }
 			if (isCvoPresent == true)
@@ -192,7 +192,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         	CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
         	CartExtension.CartValidationOutputTypeEnum.TAXES,
         	CartExtension.CartValidationOutputLevelEnum.ERROR);
-        	cvo.setMessage('There was a problem. ' + e.getMessage());
+        	cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
         	cartValidationOutputCollection.add(cvo);
         	return;
         }
@@ -234,9 +234,9 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     private Map<String, TaxData> getTaxesFromStaticResponse(Map<String, CartExtension.CartItem> cartItemsMap, String state, String country, CartExtension.TaxLocaleTypeEnum taxType) {
         Double taxRate = 0.15;
         String responseJson = '{';
-        for (String key : cartItemsMap.keySet()) {
-            CartExtension.CartItem cartItem = cartItemsMap.get(key);
-            String cartItemId = (cartItem.getId()==null) ? key : cartItem.getId();
+        for (String cartItemIdOrDeliveryGroupId : cartItemsMap.keySet()) {
+            CartExtension.CartItem cartItem = cartItemsMap.get(cartItemIdOrDeliveryGroupId);
+            String cartItemId = (cartItem.getId()==null) ? cartItemIdOrDeliveryGroupId : cartItem.getId();
 
             Double amount = cartItem.getTotalAmount()==null ? 0.00 : cartItem.getTotalAmount();
             Double tierAdjustment = cartItem.getAdjustmentAmount()==null ? 0.00 : cartItem.getAdjustmentAmount();
@@ -288,7 +288,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 netUnitPrice = amount / quantity;
             }
 
-            responseJson = responseJson + '"'+ key +'":';
+            responseJson = responseJson + '"'+ cartItemIdOrDeliveryGroupId +'":';
             responseJson = responseJson + '{';
             responseJson = responseJson + '"cartItemId": "' + cartItemId + '",';
             responseJson = responseJson + '"amount": ' + cartItemTax + ',';
@@ -311,7 +311,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         return populateTax(resultsFromStaticResponse);
     }
 
-
+    // cart will be considered as valid if it contains one deliveryGroup with deliverToAddress for tax calculation.
 	private boolean isValidCart(CartExtension.Cart cart){
 		CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
 		if(cartDeliveryGroups == null || cartDeliveryGroups.size() == 0){
