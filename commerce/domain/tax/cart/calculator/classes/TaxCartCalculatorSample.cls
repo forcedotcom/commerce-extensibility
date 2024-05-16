@@ -47,7 +47,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT) {
                 	String cartItemId = (cartItem.getId() == null) ? String.valueOf(++cartItemIdSeq) : cartItem.getId();
                 	cartItemByIdMap.put(cartItemId, cartItem);
-                } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) { // for every delivery group there will be only one cart item with type shipping charge
+                } else if (cartItem.getType() == CartExtension.SalesItemTypeEnum.CHARGE) {
                 	// Shipping cart items are uniquely identified using delivery group id.
                 	CartExtension.CartDeliveryGroup deliveryGroup = cartItem.getCartDeliveryGroup();
                 	String deliveryGroupId = (deliveryGroup.getId() == null) ? String.valueOf(++deliveryGroupIdSeq) : deliveryGroup.getId();
