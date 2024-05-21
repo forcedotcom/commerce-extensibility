@@ -62,7 +62,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 taxData = getTaxesFromExternalService(
                 cartItemByIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
-
                 taxDataShippingItems = getTaxesFromExternalService(
                 chargeItemByDeliveryGroupIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
@@ -78,8 +77,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
             if (taxData == null || taxData.size() == 0) {
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                CartExtension.CartValidationOutputTypeEnum.TAXES,
-                CartExtension.CartValidationOutputLevelEnum.ERROR);
+                CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
                 cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
                 cartValidationOutputCollection.add(cvo);
                 return;
@@ -87,20 +85,17 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
             // If no tax details are returned for any cart item, add a cart validation output entry. If
             // any invalid scenario found then return.
-            boolean isCvoPresent = false;
             for (String cartItemId : cartItemByIdMap.keySet()) {
             	TaxData taxDetails = taxData.get(cartItemId);
             	if (taxDetails == null) {
             		CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-            		CartExtension.CartValidationOutputTypeEnum.TAXES,
-            		CartExtension.CartValidationOutputLevelEnum.ERROR);
+            		CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
             		cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
             		cartValidationOutputCollection.add(cvo);
-            		isCvoPresent = true;
+            		return;
             	}
             }
-			if (isCvoPresent == true)
-				return;
+
 
             for (String cartItemId : taxData.keySet()) {
                 TaxData taxDetailsToCartId = taxData.get(cartItemId);
@@ -190,8 +185,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             }
         } catch(Exception e){
         	CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-        	CartExtension.CartValidationOutputTypeEnum.TAXES,
-        	CartExtension.CartValidationOutputLevelEnum.ERROR);
+        	CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
         	cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
         	cartValidationOutputCollection.add(cvo);
         	return;
@@ -203,31 +197,19 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
     // Admin need to modify this function according to external service api contract.
     private Map<String, TaxData> getTaxesFromExternalService(Map<String, CartExtension.CartItem> cartItemByIdMap,
     	String state, String country, CartExtension.TaxLocaleTypeEnum taxType) {
-        String requestURL = externalTaxHost+'/get-tax-rates-with-adjustments-post';
-        String requestBody =
-          '{"state":"' +
-          state +
-          '", "country":"' +
-          country +
-          '", "taxType":"' +
-          taxType +
-          '", ' +
-          '"amountsBySKU":' +
-          JSON.serialize(cartItemByIdMap) +
-          '}';
+        String requestBody = '{"state":"' + state + '", "country":"' + country + '", "taxType":"' + taxType + '", ' +
+          '"amountsBySKU":' +JSON.serialize(cartItemByIdMap) + '}';
         Http http = new Http();
         HttpRequest request = new HttpRequest();
-        request.setEndpoint(requestURL);
+        request.setEndpoint(externalTaxHost+'/get-tax-rates-with-adjustments-post');
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
         request.setBody(requestBody);
         HttpResponse response = http.send(request);
 
         // If the request is successful, parse the JSON response.
-        if (response.getStatusCode() == 200) {
-            Map<String, Object> resultsFromExternalService = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
-            return populateTax(resultsFromExternalService);
-        }
+        if (response.getStatusCode() == 200)
+            return populateTax((Map<String, Object>) JSON.deserializeUntyped(response.getBody()));
         return null;
     }
 
@@ -402,17 +384,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         private Decimal grossUnitPrice;
         private Decimal netUnitPrice;
 
-        public TaxData() {
-          rate = 0.0;
-          amount = 0.0;
-          taxName = '';
-          adjustmentTaxAmount = 0.0;
-          totalItemizedPromotionTaxAmount = 0.0;
-          itemizedPromotionTaxAmounts = null;
-          grossUnitPrice = 0.0;
-          netUnitPrice = 0.0;
-        }
-
         public TaxData(
           Decimal rateObj,
           Decimal amountObj,
@@ -469,11 +440,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 	class CartAdjustment {
         private String id;
         private Decimal amount;
-
-        public CartAdjustment() {
-          id = '';
-          amount = 0.0;
-        }
 
         public CartAdjustment(String idObj, Decimal taxAmountObj) {
           id = idObj;

@@ -80,6 +80,11 @@ public class TaxCartCalculatorSampleTest {
         CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
         TaxCartCalculatorSample calculator = new TaxCartCalculatorSample();
 
+        CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
+        CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+        CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
+        cartValidationOutputCollection.add(cvo);
+
         // Act
         Test.startTest();
         calculator.calculate(request);
@@ -88,6 +93,7 @@ public class TaxCartCalculatorSampleTest {
         // Assert
         cart = request.getCart();
         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
+        Assert.areEqual(0, cart.getCartValidationOutputs().size());
         Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
         while (cartItemCollectionIterator.hasNext()) {
             CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
