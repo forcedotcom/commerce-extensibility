@@ -54,16 +54,12 @@ public with sharing class CartItemExtensionSample extends ConnectApi.BaseEndpoin
                     Decimal listPrice = Decimal.valueOf(listPriceStr);
 
                     // Adjust the listPrice based on the currencyIsoCode
-                    switch on currencyCode {
-                        when USD_CURRENCY_ISO_CODE {
-                            listPrice += USD_ADJUSTMENT;
-                        }
-                        when AED_CURRENCY_ISO_CODE {
-                            listPrice += AED_ADJUSTMENT;
-                        }
-                        when else {
-                            listPrice += ADJUSTMENT;
-                        }
+                    if (currencyCode == USD_CURRENCY_ISO_CODE) {
+                        listPrice += USD_ADJUSTMENT;
+                    } else if (currencyCode == AED_CURRENCY_ISO_CODE) {
+                        listPrice += AED_ADJUSTMENT;
+                    } else {
+                        listPrice += ADJUSTMENT;
                     }
 
                     // Set the adjusted listPrice back to the cart item
