@@ -27,10 +27,10 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             Integer deliveryGroupIdSeq = 0;
             if (!isValidCart(cart)){
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-        	    CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
-        	    cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
-        	    cartValidationOutputCollection.add(cvo);
-        	    System.debug('The cart provided is invalid for the tax calculator, cartId: ' + cart.getId());
+                CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
+                cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
+                cartValidationOutputCollection.add(cvo);
+                System.debug('The cart provided is invalid for the tax calculator, cartId: ' + cart.getId());
             	return;
             }
 
