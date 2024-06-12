@@ -26,6 +26,11 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             Integer cartItemIdSeq = 0;
             Integer deliveryGroupIdSeq = 0;
             if (!isValidCart(cart)){
+                CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+                CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
+                cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
+                cartValidationOutputCollection.add(cvo);
+                System.debug('The cart provided is invalid for the tax calculator, cartId: ' + cart.getId());
             	return;
             }
 
@@ -57,7 +62,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
             Map<String, TaxData> taxData = null;
             Map<String, TaxData> taxDataShippingItems = null;
-            if(useExternalService){
+            if (useExternalService) {
                 // Get the tax rates and tax amounts from an external service for all given products and its adjustments.
                 taxData = getTaxesFromExternalService(
                 cartItemByIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
@@ -65,7 +70,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 taxDataShippingItems = getTaxesFromExternalService(
                 chargeItemByDeliveryGroupIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
-            } else{
+            } else {
                 taxData = getTaxesFromStaticResponse(
                 cartItemByIdMap, cartDeliveryGroup.getDeliverToAddress().getState(),
                 cartDeliveryGroup.getDeliverToAddress().getCountry(), cart.getTaxType());
@@ -80,6 +85,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                 CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
                 cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
                 cartValidationOutputCollection.add(cvo);
+                System.debug('Empty response recieved from external service or static taxes generator.');
                 return;
             }
 
@@ -92,6 +98,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             		CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
             		cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
             		cartValidationOutputCollection.add(cvo);
+            		System.debug('Tax details received from service response is null for cartItemId: ' + cartItemId);
             		return;
             	}
             }
@@ -183,11 +190,12 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
                     cartTaxCollection.add(cartTax);
                 }
             }
-        } catch(Exception e){
+        } catch(Exception e) {
         	CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
         	CartExtension.CartValidationOutputTypeEnum.TAXES, CartExtension.CartValidationOutputLevelEnum.ERROR);
         	cvo.setMessage('Something went wrong. Please contact Salesforce Admin or try again.');
         	cartValidationOutputCollection.add(cvo);
+        	System.debug('Exception occurred, message:' + e.getMessage() + ', stacktrace: ' + e.getStackTraceString());
         	return;
         }
     }
