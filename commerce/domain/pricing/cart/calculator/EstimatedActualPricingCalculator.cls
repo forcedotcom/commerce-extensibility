@@ -45,55 +45,62 @@ public class EstimatedActualPricingCalculator extends CartExtension.PricingCartC
     }
 
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
-        CartExtension.Cart cart = request.getCart();
+        try {
+            CartExtension.Cart cart = request.getCart();
 
-        if (cart.getStatus() == CartExtension.CartStatusEnum.ACTIVE) {
-            super.calculate(request);
-            return;
-        }
-
-        Iterator<CartExtension.CartItem> cartItemsIterator = clearErrorsAndGetCartItemsIterator(cart, request.getOptionalBuyerActionDetails());
-
-        // Get the SKUs from each cart item that needs price calculations
-        Map<String, CartExtension.CartItem> skuToCartItem = new Map<String, CartExtension.CartItem>();
-        while (cartItemsIterator.hasNext()) {
-            CartExtension.CartItem cartItem = cartItemsIterator.next();
-            skuToCartItem.put(cartItem.getSku(), cartItem);
-        }
-
-        Map<String, Decimal> pricingDataMap = getPricingDataFromExternalServiceForSkus(skuToCartItem.keySet());
-        if (pricingDataMap == Null) {
-            // No data returned means there is an issue with underlying 3rd party service. Populate generic error message for the Buyer.
-            CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                                                        CartExtension.CartValidationOutputTypeEnum.PRICING,
-                                                        CartExtension.CartValidationOutputLevelEnum.ERROR);
-            String errorMessage = getGenericErrorMessage();
-            cvo.setMessage(errorMessage);
-            cart.getCartValidationOutputs().add(cvo);
-            return;
-        }
-
-        cartItemsIterator = skuToCartItem.values().iterator();
-        while (cartItemsIterator.hasNext()) {
-            CartExtension.CartItem cartItem = cartItemsIterator.next();
-            if (!pricingDataMap.containsKey(cartItem.getSku())) {
-                // No price available for the SKU in the Cart. Populate error message for the Buyer.
+            if (cart.getStatus() == CartExtension.CartStatusEnum.ACTIVE) {
+                super.calculate(request);
+                return;
+            }
+    
+            Iterator<CartExtension.CartItem> cartItemsIterator = clearErrorsAndGetCartItemsIterator(cart, request.getOptionalBuyerActionDetails());
+    
+            // Get the SKUs from each cart item that needs price calculations
+            Map<String, CartExtension.CartItem> skuToCartItem = new Map<String, CartExtension.CartItem>();
+            while (cartItemsIterator.hasNext()) {
+                CartExtension.CartItem cartItem = cartItemsIterator.next();
+                skuToCartItem.put(cartItem.getSku(), cartItem);
+            }
+    
+            Map<String, Decimal> pricingDataMap = getPricingDataFromExternalServiceForSkus(skuToCartItem.keySet());
+            if (pricingDataMap == Null) {
+                // No data returned means there is an issue with underlying 3rd party service. Populate generic error message for the Buyer.
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                                        CartExtension.CartValidationOutputTypeEnum.PRICING,
-                                        CartExtension.CartValidationOutputLevelEnum.ERROR,
-                                        cartItem);
-                String errorMessage = getFailedToRepriceItemMessage(cartItem);
+                                                            CartExtension.CartValidationOutputTypeEnum.PRICING,
+                                                            CartExtension.CartValidationOutputLevelEnum.ERROR);
+                String errorMessage = getGenericErrorMessage();
                 cvo.setMessage(errorMessage);
                 cart.getCartValidationOutputs().add(cvo);
-                continue;
+                System.debug('No Pricing data received');
+                return;
             }
-            Decimal price = pricingDataMap.get(cartItem.getSku());
-            // Update cart item fields
-            cartItem.setListPrice(price);
-            cartItem.setSalesPrice(price);
-            cartItem.setTotalListPrice(price * cartItem.getQuantity());
-            cartItem.setTotalPrice(price * cartItem.getQuantity());
+    
+            cartItemsIterator = skuToCartItem.values().iterator();
+            while (cartItemsIterator.hasNext()) {
+                CartExtension.CartItem cartItem = cartItemsIterator.next();
+                if (!pricingDataMap.containsKey(cartItem.getSku())) {
+                    // No price available for the SKU in the Cart. Populate error message for the Buyer.
+                    CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
+                                            CartExtension.CartValidationOutputTypeEnum.PRICING,
+                                            CartExtension.CartValidationOutputLevelEnum.ERROR,
+                                            cartItem);
+                    String errorMessage = getFailedToRepriceItemMessage(cartItem);
+                    cvo.setMessage(errorMessage);
+                    cart.getCartValidationOutputs().add(cvo);
+                    continue;
+                }
+                Decimal price = pricingDataMap.get(cartItem.getSku());
+                // Update cart item fields
+                cartItem.setListPrice(price);
+                cartItem.setSalesPrice(price);
+                cartItem.setTotalListPrice(price * cartItem.getQuantity());
+                cartItem.setTotalPrice(price * cartItem.getQuantity());
+            }
+        } catch (Exception e) {
+            System.debug('Exception occurred, message:' + e.getMessage() + ', stacktrace: ' + e.getStackTraceString());
+            throw e;
         }
+
     }
 
     /**
@@ -220,6 +227,7 @@ public class EstimatedActualPricingCalculator extends CartExtension.PricingCartC
 
         if (r.getStatusCode() != 200) {
             // return null in case of not successful response from 3rd party service
+            System.debug('Did not receive pricing data. Call to external service was not successful.');
             return null;
         }
 

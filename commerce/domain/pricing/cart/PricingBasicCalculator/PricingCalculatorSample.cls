@@ -47,6 +47,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
                 CartExtension.CartValidationOutputLevelEnum.ERROR);
                 cvo.setMessage('We are not able to process your cart. Please contact support.');
                 cart.getCartValidationOutputs().add(cvo);
+                System.debug('No Pricing data received');
                 return;
             }
             applyPricesToCartItems(cart, cartItems.iterator(), pricingDataMap);
@@ -55,6 +56,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
             // This is an example of throwing special type of Exception (CartCalculateRuntimeException).
             // Throwing this exception causes the rollback of all previously applied changes to the cart (in scope of given request)
             // and may not always be the best choice.
+            System.debug('Exception occurred, message:' + e.getMessage() + ', stacktrace: ' + e.getStackTraceString());
             throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
         }
     }
@@ -151,6 +153,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
                             cartItem);
                 cvo.setMessage('No price available for the SKU in the Cart.');
                 cart.getCartValidationOutputs().add(cvo);
+                System.debug('No price available for the SKU: ' + cartItem.getSku());
                 continue;
             }
             setPricingFieldsOnCart(cartItem, lineItemIdToPricingDetailsMap.get(cartItem.getSku()));
@@ -195,6 +198,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
 
         if (r.getStatusCode() != 200) {
             // return null in case of not successful response from 3rd party service
+            System.debug('Did not receive pricing data. Call to external service was not successful.');
             return null;
         }
 
