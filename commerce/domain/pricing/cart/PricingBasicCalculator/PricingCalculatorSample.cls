@@ -57,7 +57,7 @@ public class PricingCalculatorSample extends CartExtension.PricingCartCalculator
             // Throwing this exception causes the rollback of all previously applied changes to the cart (in scope of given request)
             // and may not always be the best choice.
             System.debug('Exception occurred, message:' + e.getMessage() + ', stacktrace: ' + e.getStackTraceString());
-            throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin.');
+            throw new CartExtension.CartCalculateRuntimeException('An integration error occurred in COMPUTE_PRICES. Contact your admin', e);
         }
     }
 
