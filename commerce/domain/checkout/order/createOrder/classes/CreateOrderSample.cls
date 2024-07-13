@@ -13,7 +13,9 @@ public virtual class CreateOrderSample extends CartExtension.CheckoutCreateOrder
         List<OrderItem> orderItems = orderGraph.getOrderItems();        
         Decimal roundedPrice = 0.0;
         for (OrderItem orderItem : orderItems) {
-            roundedPrice += orderItem.UnitPrice.round(System.RoundingMode.CEILING);
+            if(orderItem.UnitPrice != null) {
+                roundedPrice += orderItem.UnitPrice.round(System.RoundingMode.CEILING);
+            }
         }
         order.Description += roundedPrice;
         return response;
