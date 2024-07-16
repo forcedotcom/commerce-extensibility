@@ -233,7 +233,7 @@ global class CartCalculateSampleUnitTest {
     @IsTest
     public static void shouldRunPricingPromotionWhenCartIsActiveAndBuyerRequestsRecalculation() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart('Active');;
+        CartExtension.Cart cart = arrangeCart('Active');
 
         // Arrange BuyerActions for a Cart Recalculation Request
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForRecalculationRequest(cart);
@@ -252,7 +252,7 @@ global class CartCalculateSampleUnitTest {
     @IsTest
     public static void shouldRunPricingPromotionInventoryShippingPostShippingTaxesWhenCartIsInCheckoutAndBuyerRequestsRecalculation() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart('Checkout');;
+        CartExtension.Cart cart = arrangeCart('Checkout');
 
         // Arrange BuyerActions for a Cart Recalculation Request
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForRecalculationRequest(cart);
