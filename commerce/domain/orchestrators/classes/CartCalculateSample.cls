@@ -31,12 +31,12 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         // Use BuyerActions to decide which calculators to invoke
         CartExtension.BuyerActions buyerActions = request.getBuyerActions();
         boolean isCouponAppliedInCheckout = isCouponAppliedInCheckout(buyerActions, cart);
-        boolean runPricing = buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
-        boolean runPromotions = buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
-        boolean runInventory = buyerActions.isCheckoutStarted();
-        boolean runShipping = buyerActions.isDeliveryGroupChanged() || isCouponAppliedInCheckout;
-        boolean runPostShipping = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
-        boolean runTaxes = buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
+        boolean runPricing = buyerActions.isRecalculationRequested() || buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
+        boolean runPromotions = buyerActions.isRecalculationRequested() || buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
+        boolean runInventory = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isCheckoutStarted();
+        boolean runShipping = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || isCouponAppliedInCheckout;
+        boolean runPostShipping = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
+        boolean runTaxes = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
@@ -107,5 +107,9 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
 
     private Boolean isCouponAppliedInCheckout(CartExtension.BuyerActions buyerActions, CartExtension.Cart cart) {
         return cart.getStatus() == CartExtension.CartStatusEnum.CHECKOUT && buyerActions.isCouponChanged();
+    }
+
+    private Boolean isRecalculationRequestedInCheckout(CartExtension.BuyerActions buyerActions, CartExtension.Cart cart) {
+        return buyerActions.isRecalculationRequested() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus();
     }
 }

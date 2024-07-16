@@ -230,6 +230,43 @@ global class CartCalculateSampleUnitTest {
         assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED});
     }
 
+    @IsTest
+    public static void shouldRunPricingPromotionWhenCartIsActiveAndBuyerRequestsRecalculation() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart('Active');
+
+        // Arrange BuyerActions for a Cart Recalculation Request
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForRecalculationRequest(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForRecalculationRequest();
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+        
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
+        assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+    }
+
+    @IsTest
+    public static void shouldRunPricingPromotionInventoryShippingPostShippingTaxesWhenCartIsInCheckoutAndBuyerRequestsRecalculation() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart('Checkout');
+
+        // Arrange BuyerActions for a Cart Recalculation Request
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForRecalculationRequest(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForRecalculationRequest();
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+        
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
+    }
+
     private static CartExtension.Cart arrangeCart() {
         Account testAccount = new Account(Name='My Account');
         insert testAccount;
@@ -438,6 +475,12 @@ global class CartCalculateSampleUnitTest {
         return buyerActionDetails;
     }
 
+    private static CartExtension.BuyerActionsMock getBuyerActionsForRecalculationRequest(CartExtension.Cart cart) {
+        CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
+        buyerActions.setRecalculationRequested(True);
+        return buyerActions;
+    }
+
     private static CartExtension.BuyerActionsMock getBuyerActionsForStartCheckout(CartExtension.Cart cart) {
         CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
         buyerActions.setCheckoutStarted(True);
@@ -500,6 +543,12 @@ global class CartCalculateSampleUnitTest {
         List<CartExtension.CartDeliveryGroupChange> deliveryGroupChanges = new List<CartExtension.CartDeliveryGroupChange>{deliveryGroupChange};
         CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails.Builder()
                                                                                       .withDeliveryGroupChanges(deliveryGroupChanges)
+                                                                                      .build();
+        return buyerActionDetails;
+    }
+
+    private static CartExtension.BuyerActionDetails getBuyerActionDetailsForRecalculationRequest() {
+        CartExtension.BuyerActionDetails buyerActionDetails = new CartExtension.BuyerActionDetails.Builder()
                                                                                       .build();
         return buyerActionDetails;
     }
