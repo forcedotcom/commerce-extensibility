@@ -25,38 +25,30 @@ public class CommerceInventoryServiceSampleTest {
     @IsTest
     public static void testDeleteReservation() {
         // Arrange
-        Schema.InventoryReservation invReservation = new Schema.InventoryReservation();
-        invReservation.ReservationDate = DateTime.now();
-        insert invReservation;
-        
-        CommerceInventoryServiceSample inventoryService = new CommerceInventoryServiceSample();
+        CommerceInventoryServiceSampleMock inventoryServiceMock = new CommerceInventoryServiceSampleMock();
+      
         // Act
-        commerce_inventory.DeleteReservationResponse response = inventoryService.deleteReservation(invReservation.Id, null);
+        commerce_inventory.DeleteReservationResponse response = inventoryServiceMock.deleteReservation('10rxx000007LbIRAA0', null);
+        
         // Assert
         System.assertEquals(true, response.getSucceed());
     }
 
-    @IsTest
+   @IsTest
     public static void testGetReservation() {
+
         // Arrange
-        Schema.InventoryReservation invReservation = new Schema.InventoryReservation();
-        invReservation.reservationDate = DateTime.now();
-        invReservation.reservationIdentifier = '10rxx000007LbIRAA0';
-        invReservation.errorCode = 'error';
-        invReservation.errorMessage = 'errorMessage';
-        insert invReservation;
-    
-        Schema.InventoryReservation invReservation2 = new Schema.InventoryReservation();
-        invReservation2.reservationDate = DateTime.now();
-    
-        CommerceInventoryServiceSample inventoryService = new CommerceInventoryServiceSample();
+        CommerceInventoryServiceSampleMock inventoryServiceMock = new CommerceInventoryServiceSampleMock();
+       
         // Act
-        commerce_inventory.InventoryReservation response = inventoryService.getReservation('10rxx000007LbIRAA0');
-        commerce_inventory.InventoryReservation response2 = inventoryService.getReservation(invReservation2.Id);
+        commerce_inventory.InventoryReservation response = inventoryServiceMock.getReservation('10rxx000007LbIRAA0');
+        commerce_inventory.InventoryReservation response2 = inventoryServiceMock.getReservation('10rxx000007LbIRAA1');
+
         // Assert
         System.assertNotEquals(null, response);
+        System.assertEquals(null, response2);
     }
-
+    
     @IsTest
     public static void testCheckInventory() {
         // Arrange
@@ -135,4 +127,25 @@ public class CommerceInventoryServiceSampleTest {
         response.setItemsInventoryLevels(items);
         return response;
     }
+    
+    private class CommerceInventoryServiceSampleMock extends CommerceInventoryServiceSample {
+        
+        public override commerce_inventory.DeleteReservationResponse callDefaultDeleteReservation(String reservationId,  commerce_inventory.InventoryReservation currentReservation) {
+            commerce_inventory.DeleteReservationResponse responseMock = new commerce_inventory.DeleteReservationResponse();
+            responseMock.setSucceed(true);
+            return responseMock;
+        }
+        
+    
+        public override commerce_inventory.InventoryReservation callDefaultGetReservation(String reservationId) {
+            if (reservationId == '10rxx000007LbIRAA0') {
+                commerce_inventory.InventoryReservation responseMock = new commerce_inventory.InventoryReservation();
+                responseMock.setReservationIdentifier(reservationId);
+                return responseMock;    
+            } else {
+                return null;
+            }        
+        }
+    }
+    
 }
