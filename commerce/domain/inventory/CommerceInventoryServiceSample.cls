@@ -67,13 +67,13 @@ public virtual class CommerceInventoryServiceSample extends commerce_inventory.C
     }
     
 	@TestVisible
-    private virtual commerce_inventory.DeleteReservationResponse callDefaultDeleteReservation(String reservationId,  commerce_inventory.InventoryReservation currentReservation) {
+    public virtual commerce_inventory.DeleteReservationResponse callDefaultDeleteReservation(String reservationId,  commerce_inventory.InventoryReservation currentReservation) {
                  system.debug('callDefaultDeleteReservation');
         return super.deleteReservation(reservationId, currentReservation);
     }
     
 	@TestVisible
-    private virtual commerce_inventory.InventoryReservation callDefaultGetReservation(String reservationId) {
+    public virtual commerce_inventory.InventoryReservation callDefaultGetReservation(String reservationId) {
          return super.getReservation(reservationId);
     }
     
