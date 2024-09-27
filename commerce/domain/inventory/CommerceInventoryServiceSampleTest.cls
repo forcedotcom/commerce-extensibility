@@ -100,6 +100,31 @@ public class CommerceInventoryServiceSampleTest {
         System.assertEquals(itemExpectedResponse.getProductId(), itemActualResponse.getProductId());       
     }
 
+    @IsTest
+    public static void testgetInventoryLevelDataValidation() {
+
+        // Arrange
+        Set<commerce_inventory.InventoryLevelsItemRequest> itemRequest = new Set<commerce_inventory.InventoryLevelsItemRequest>();
+        commerce_inventory.InventoryLevelsRequest request = new commerce_inventory.InventoryLevelsRequest(null, itemRequest);
+        CommerceInventoryServiceSample inventoryService = new CommerceInventoryServiceSample();
+
+        String errorMessage  = ''
+
+        // Act
+        Test.startTest();
+        try {
+            commerce_inventory.InventoryLevelsResponse actualResponse = inventoryService.getInventoryLevel(request);
+            String errorMessage  = 'Sucess Response';
+        } catch(DataConflict dataConflictEx) {
+            errorMessage = dataConflictEx.getMessage();
+            
+        }
+        Test.stopTest();
+
+        // Assert
+        assertEquals(errorMessage.contains('Invalid request size'));
+    }
+
     private static commerce_inventory.UpsertReservationResponse createUpsertReservationResponse() {
         commerce_inventory.UpsertReservationResponse response = new commerce_inventory.UpsertReservationResponse();
         List<commerce_inventory.UpsertItemReservationResponse> items = new List<commerce_inventory.UpsertItemReservationResponse>();
@@ -147,5 +172,7 @@ public class CommerceInventoryServiceSampleTest {
             }        
         }
     }
+
+    
     
 }
