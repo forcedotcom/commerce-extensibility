@@ -10,17 +10,21 @@ public class InventoryCartCalculatorSampleTest {
     private static final String CART_ITEM3_NAME = 'My Cart Item 3';
     private static final String SKU1_NAME = 'My SKU 1';
     private static final String SKU2_NAME = 'My SKU 2';
-    private static final String SKU3_NAME = 'My SKU 3';
+    private static final String SKU_RED_SHIRT = 'SKU_RED_SHIRT';
+    private static final String SKU_RED_SHIRT_MESSAGE = 'Apologies for the inconvenience, but there may be a slight delay in the shipping of SKU_RED_SHIRT'; 
 
     @IsTest
-    public static void testNoCVOCartStatus() {
+    public static void testWithSkuRedShirtNotInCart() {
       
          // Arrange
-         CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
+         CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.CHECKOUT, false);
          InventoryCartCalculatorSample calculator = new InventoryCartCalculatorSample(new DefaultInventoryCartCalculatoMockExecutor());
 
         Test.startTest();
+        
+        // Act
         calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        
         Test.stopTest();
 
         // Assert
@@ -30,33 +34,17 @@ public class InventoryCartCalculatorSampleTest {
     }
     
     @IsTest
-    public static void testCleanCVOCartStatus() {
+    public static void testWithSkuRedShirtInCart() {
       
          // Arrange
-         CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.ACTIVE);
-        
+         CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.CHECKOUT, true);
          InventoryCartCalculatorSample calculator = new InventoryCartCalculatorSample(new DefaultInventoryCartCalculatoMockExecutor());
 
         Test.startTest();
-        calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
-        Test.stopTest();
-
-        // Assert
-        assertNoCartValidationOutputs(cart, 0);
-
         
-    }
-
-     @IsTest
-    public static void testWithCVOCartStatus() {
-      
-         // Arrange
-         CartExtension.Cart cart = arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum.CHECKOUT);
-         addCvoToCart(cart);
-         InventoryCartCalculatorSample calculator = new InventoryCartCalculatorSample(new DefaultInventoryCartCalculatoMockExecutor());
-
-        Test.startTest();
+        // Act
         calculator.calculate(new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty()));
+        
         Test.stopTest();
 
         // Assert
@@ -77,44 +65,15 @@ public class InventoryCartCalculatorSampleTest {
         public DefaultInventoryCartCalculatoMockExecutor() {}
 
         public override void defaultInventory(CartExtension.CartCalculateCalculatorRequest request) {
-            
-                        CartExtension.Cart cart = request.getCart();
-
-           removeAllCVOsOfType(cart, CartExtension.CartValidationOutputTypeEnum.INVENTORY);
-
-            Integer i = 0;
-    
-            CartExtension.CartItemList cartItemCollection = cart.getCartItems();
-            Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
-    
-            while (cartItemCollectionIterator.hasNext()) {
-                CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
-    
-                if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT && i == 0) {
-    
-                    CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                        CartExtension.CartValidationOutputTypeEnum.INVENTORY,
-                        CartExtension.CartValidationOutputLevelEnum.ERROR);
-                        cart.getCartValidationOutputs().add(cvo);
-                }
-                i = i + 1;
-            }
+            // avoid the call to the implementation
+            return;              
         }
         
-        private void removeAllCVOsOfType(CartExtension.Cart cart, CartExtension.CartValidationOutputTypeEnum type) {
-        CartExtension.CartValidationOutputList cartValidationOutputList = cart.getCartValidationOutputs();
-            for (Integer i = (cartValidationOutputList.size() - 1); i >= 0; i--) {
-                CartExtension.CartValidationOutput cvo = cartValidationOutputList.get(i);
-                if (cvo.getType() == type) {
-                    cartValidationOutputList.remove(cvo);
-                }
-            }
-        }
     }
     
-    private static CartExtension.Cart arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum cartStatus) {
+    private static CartExtension.Cart arrangeAndLoadCartWithSpecifiedStatusAndThreeItems(CartExtension.CartStatusEnum cartStatus, boolean ignoreRedShirtSku) {
         Id cartId = arrangeCartWithSpecifiedStatus(cartStatus);
-        arrangeThreeCartItems(cartId);
+        arrangeThreeCartItems(cartId, ignoreRedShirtSku);
         return CartExtension.CartTestUtil.getCart(cartId);
     }
     
@@ -134,7 +93,7 @@ public class InventoryCartCalculatorSampleTest {
         return webCart.Id;
     }
 
-    private static List<ID> arrangeThreeCartItems(ID cartId) {
+    private static List<ID> arrangeThreeCartItems(ID cartId, Boolean ignoreRedShirtSku) {
         CartDeliveryGroup deliveryGroup = new CartDeliveryGroup(Name = DELIVERYGROUP_NAME, CartId = cartId);
         insert deliveryGroup;
 
@@ -157,43 +116,35 @@ public class InventoryCartCalculatorSampleTest {
         insert cartItem2;
 
         CartItem cartItem3 = new CartItem(
-                Name = CART_ITEM3_NAME,
-                CartId = cartId,
-                CartDeliveryGroupId = deliveryGroup.Id,
-                Quantity = 3,
-                SKU = SKU3_NAME,
-                Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
-        insert cartItem3;
-        return new List<ID>{cartItem1.Id, cartItem2.Id, cartItem3.Id};
+            Name = CART_ITEM3_NAME,
+            CartId = cartId,
+            CartDeliveryGroupId = deliveryGroup.Id,
+            Quantity = 3,
+            SKU = SKU_RED_SHIRT,
+            Type = CartExtension.SalesItemTypeEnum.PRODUCT.name());
+
+        if (ignoreRedShirtSku) {
+            insert cartItem3;
+        } 
+
+        if (ignoreRedShirtSku) {
+            return new List<ID>{cartItem1.Id, cartItem2.Id};
+        } else {
+            return new List<ID>{cartItem1.Id, cartItem2.Id, cartItem3.Id};
+        }
+        
     }
 
     private static void assertNoCartValidationOutputs(CartExtension.Cart cart, Integer expectedCVOCount) {
         String errorString = '';
         Iterator<CartExtension.CartValidationOutput> cvoIterator = cart.getCartValidationOutputs().iterator();
         while (cvoIterator.hasNext()) {
-            errorString += cvoIterator.next().getMessage() + '; ';
+            errorString += cvoIterator.next().getMessage() ;
         }
         Assert.areEqual(expectedCVOCount, cart.getCartValidationOutputs().size(), 'No CartValidationOutputs expected, but was: ' + errorString);
+        
+        if (expectedCVOCount == 1) {
+			Assert.areEqual(SKU_RED_SHIRT_MESSAGE, errorString, SKU_RED_SHIRT_MESSAGE + ' expected, but was: ' + errorString);
+        }
     }
-    
-    private static void addCvoToCart( CartExtension.Cart cart) {
-         CartExtension.CartItemList cartItemCollection = cart.getCartItems();
-            Iterator<CartExtension.CartItem> cartItemCollectionIterator = cartItemCollection.iterator();
-    
-        	Integer i = 0;
-            while (cartItemCollectionIterator.hasNext()) {
-                CartExtension.CartItem cartItem = cartItemCollectionIterator.next();
-    
-                if (cartItem.getType() == CartExtension.SalesItemTypeEnum.PRODUCT && i == 0) {
-    
-                    CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
-                        CartExtension.CartValidationOutputTypeEnum.INVENTORY,
-                        CartExtension.CartValidationOutputLevelEnum.ERROR);
-                        cart.getCartValidationOutputs().add(cvo);
-                }
-                i = i + 1;
-            }
-    }
-    
-
 }
