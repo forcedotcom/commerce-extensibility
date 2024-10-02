@@ -173,8 +173,5 @@ public class CommerceInventoryServiceSampleTest {
                 return null;
             }        
         }
-    }
-
-    
-    
+    }   
 }
