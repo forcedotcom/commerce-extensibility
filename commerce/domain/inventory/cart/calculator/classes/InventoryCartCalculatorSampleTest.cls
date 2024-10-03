@@ -28,7 +28,7 @@ public class InventoryCartCalculatorSampleTest {
         Test.stopTest();
 
         // Assert
-        assertNoCartValidationOutputs(cart, 0);
+        assertCartValidationOutputs(cart, 0);
 
         
     }
@@ -48,7 +48,7 @@ public class InventoryCartCalculatorSampleTest {
         Test.stopTest();
 
         // Assert
-        assertNoCartValidationOutputs(cart, 1);
+        assertCartValidationOutputs(cart, 1);
 
         
     }
@@ -135,7 +135,7 @@ public class InventoryCartCalculatorSampleTest {
         
     }
 
-    private static void assertNoCartValidationOutputs(CartExtension.Cart cart, Integer expectedCVOCount) {
+    private static void assertCartValidationOutputs(CartExtension.Cart cart, Integer expectedCVOCount) {
         String errorString = '';
         Iterator<CartExtension.CartValidationOutput> cvoIterator = cart.getCartValidationOutputs().iterator();
         while (cvoIterator.hasNext()) {
