@@ -46,7 +46,7 @@
             if (cartItem.getSku().equals(SKU_RED_SHIRT)) {
                 CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(
                     CartExtension.CartValidationOutputTypeEnum.INVENTORY,
-                    CartExtension.CartValidationOutputLevelEnum.WARNING, cartItem);
+                    CartExtension.CartValidationOutputLevelEnum.ERROR, cartItem);
                     cvo.setMessage(SKU_RED_SHIRT_MESSAGE);
                     cart.getCartValidationOutputs().add(cvo);
                 system.debug('CART CVO: ' + cvo);
