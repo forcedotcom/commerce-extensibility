@@ -5,7 +5,7 @@
   * 
   * The customer was notified by the warehouse that during the inventory process, SKU_RED_SHIRT was accidentally made available. 
   * Due to a system issue, the warehouse is currently unable to mark it as unavailable again. 
-  * Customer does want to sell the SKU-RED_SHIRT in the store front
+  * Customer does NOT want to sell the SKU_RED_SHIRT in the store front
   * 
   * SI Solution
   * Extended inventory calculator to show a message during checkout that SKU_RED_SHIRT that shipping migth be delay 
@@ -15,7 +15,7 @@
 
 
     private static final String SKU_RED_SHIRT = 'SKU_RED_SHIRT'; 
-    private static final String SKU_RED_SHIRT_MESSAGE = 'Apologies for the inconvenience, but there may be a slight delay in the shipping of SKU_RED_SHIRT'; 
+    private static final String SKU_RED_SHIRT_MESSAGE = 'Apologies for the inconvenience, but there is an issue with SKU_RED_SHIRT, and it is currently unavailable.'; 
 
     public InventoryCartCalculatorSample() {
         super();
@@ -33,10 +33,6 @@
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) { 
 
         CartExtension.Cart cart = request.getCart();    
-
-        if (cart.getStatus() != CartExtension.CartStatusEnum.CHECKOUT) {
-            return;
-        }
 
         super.calculate(request);
 

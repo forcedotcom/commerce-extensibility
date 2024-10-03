@@ -11,7 +11,7 @@ public class InventoryCartCalculatorSampleTest {
     private static final String SKU1_NAME = 'My SKU 1';
     private static final String SKU2_NAME = 'My SKU 2';
     private static final String SKU_RED_SHIRT = 'SKU_RED_SHIRT';
-    private static final String SKU_RED_SHIRT_MESSAGE = 'Apologies for the inconvenience, but there may be a slight delay in the shipping of SKU_RED_SHIRT'; 
+    private static final String SKU_RED_SHIRT_MESSAGE = 'Apologies for the inconvenience, but there is an issue with SKU_RED_SHIRT, and it is currently unavailable.'; 
 
     @IsTest
     public static void testWithSkuRedShirtNotInCart() {
