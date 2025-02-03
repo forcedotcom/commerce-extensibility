@@ -31,12 +31,39 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
         // Use BuyerActions to decide which calculators to invoke
         CartExtension.BuyerActions buyerActions = request.getBuyerActions();
         boolean isCouponAppliedInCheckout = isCouponAppliedInCheckout(buyerActions, cart);
-        boolean runPricing = buyerActions.isRecalculationRequested() || buyerActions.isCheckoutStarted() || buyerActions.isCartItemChanged();
-        boolean runPromotions = buyerActions.isRecalculationRequested() || buyerActions.isCheckoutStarted() || buyerActions.isCouponChanged() || buyerActions.isCartItemChanged();
-        boolean runInventory = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isCheckoutStarted();
-        boolean runShipping = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || isCouponAppliedInCheckout;
-        boolean runPostShipping = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
-        boolean runTaxes = isRecalculationRequestedInCheckout(buyerActions, cart) || buyerActions.isDeliveryGroupChanged() || buyerActions.isDeliveryMethodSelected() || isCouponAppliedInCheckout;
+
+        boolean runPricing = buyerActions.isRecalculationRequested() ||
+                            buyerActions.isCheckoutStarted() ||
+                            buyerActions.isCartItemChanged();
+
+
+        boolean runPromotions = buyerActions.isRecalculationRequested() ||
+                                buyerActions.isCheckoutStarted() ||
+                                buyerActions.isCouponChanged() ||
+                                buyerActions.isCartItemChanged() ||
+                                isCouponAppliedInCheckout;
+
+        boolean runInventory = isRecalculationRequestedInCheckout(buyerActions, cart) ||
+                                buyerActions.isCheckoutStarted() ||
+                                (buyerActions.isCartItemChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus());
+
+        boolean runShipping =  buyerActions.isEvaluateShippingRequested() ||
+                                isRecalculationRequestedInCheckout(buyerActions, cart) && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                                isCouponAppliedInCheckout ||
+                                (buyerActions.isDeliveryGroupChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus());
+
+        boolean runPostShipping = buyerActions.isEvaluateShippingRequested() ||
+                                    (isRecalculationRequestedInCheckout(buyerActions, cart) && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                                    (buyerActions.isDeliveryGroupChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                                    (buyerActions.isDeliveryMethodSelected() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                                    isCouponAppliedInCheckout;
+
+        boolean runTaxes = buyerActions.isEvaluateTaxesRequested() ||
+                            (isRecalculationRequestedInCheckout(buyerActions, cart) && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                            (buyerActions.isDeliveryGroupChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                            (buyerActions.isDeliveryMethodSelected() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                            isCouponAppliedInCheckout;
+
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
