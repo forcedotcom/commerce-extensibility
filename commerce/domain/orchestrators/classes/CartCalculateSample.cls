@@ -47,7 +47,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
                                 (buyerActions.isCartItemChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus());
 
         boolean runShipping =  buyerActions.isEvaluateShippingRequested() ||
-                                isRecalculationRequestedInCheckout(buyerActions, cart) && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
+                                (isRecalculationRequestedInCheckout(buyerActions, cart) && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
                                 isCouponAppliedInCheckout ||
                                 (buyerActions.isDeliveryGroupChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus());
 
@@ -62,6 +62,7 @@ global class CartCalculateSample extends CartExtension.CartCalculate {
                             (buyerActions.isDeliveryGroupChanged() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
                             (buyerActions.isDeliveryMethodSelected() && CartExtension.CartStatusEnum.CHECKOUT == cart.getStatus()) ||
                             isCouponAppliedInCheckout;
+
 
         // OptionalBuyerActionDetails can be used to optimize the various calculators that are invoked
         CartExtension.CartCalculateCalculatorRequest calculatorRequest = new CartExtension.CartCalculateCalculatorRequest(cart, request.getOptionalBuyerActionDetails());
