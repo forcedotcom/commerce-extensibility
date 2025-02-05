@@ -38,6 +38,25 @@ global class CartCalculateSampleUnitTest {
         assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
         assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
     }
+    
+        @IsTest
+    public static void shouldRunPricingPromotionsInventoryWhenBuyerAddsToCartInCheckoutState() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart('Checkout');
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has added an item to cart
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForAddToCart(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForAddToCart(cart.getCartItems().get(0));
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED});
+        assertUnexpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+    }
 
     @IsTest
     public static void shouldRunPricingAndPromotionsWhenBuyerRemovesItemToCart() {
@@ -56,6 +75,25 @@ global class CartCalculateSampleUnitTest {
         assertNoCartValidationOutputs(cart);
         assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED});
         assertUnexpectedCalculations(cart, new List<String>{INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+    }
+    
+    @IsTest
+    public static void shouldRunPricingPromotionsInventoryWhenBuyerRemovesItemToCartInCheckoutState() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart('Checkout');
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has added an item to cart
+        CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForDeleteFromCart(cart);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForDeleteFromCart();
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED});
+        assertUnexpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
     }
 
     @IsTest
@@ -133,7 +171,6 @@ global class CartCalculateSampleUnitTest {
         assertExpectedCalculations(cart, new List<String>{PROMOTIONS_RECALCULATED, SHIPPING_RECALCULATED, POST_SHIPPING_COMPLETED, TAXES_RECALCULATED});
         assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, INVENTORY_CHECKED});
 
-
     }
 
     @IsTest
@@ -177,7 +214,7 @@ global class CartCalculateSampleUnitTest {
     @IsTest
     public static void shouldRunPricingPromotionsInventoryShippingTaxesWhenRegisteredBuyerStartsCheckoutGivenShippingAddressAvailable() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart();
+        CartExtension.Cart cart = arrangeCart('Checkout');
 
         // Arrange BuyerActions and BuyerActionDetails as if the Buyer has started Checkout
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForStartCheckoutForBuyerWithShippingAddress(cart);
@@ -189,13 +226,56 @@ global class CartCalculateSampleUnitTest {
 
         // Assert
         assertNoCartValidationOutputs(cart);
+        
         assertExpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+    }
+    
+    @IsTest
+    public static void shouldRunShippingTaxesWhenCartIsInCheckoutStateGivenShippingAddressAvailable() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart('Checkout');
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has started Checkout
+        CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
+        buyerActions.setDeliveryGroupChanged(True);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForStartCheckoutForBuyerWithShippingAddress(cart.getCartDeliveryGroups().get(0));
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        
+        assertExpectedCalculations(cart, new List<String>{SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED});
+    }
+    
+    @IsTest
+    public static void shouldRunNoCalculatorWhenCartIsInActiveStateGivenAndDeliverMethodSelectedAndShippingAddressAvailable() {
+        // Arrange Cart
+        CartExtension.Cart cart = arrangeCart();
+
+        // Arrange BuyerActions and BuyerActionDetails as if the Buyer has started Checkout
+        CartExtension.BuyerActionsMock buyerActions = new CartExtension.BuyerActionsMock(cart);
+        buyerActions.setDeliveryGroupChanged(True);
+        buyerActions.setDeliveryMethodSelected(True);
+        CartExtension.BuyerActionDetails buyerActionDetails = getBuyerActionDetailsForStartCheckoutForBuyerWithShippingAddress(cart.getCartDeliveryGroups().get(0));
+        CartExtension.OptionalBuyerActionDetails optionalBuyerActionDetails = CartExtension.OptionalBuyerActionDetails.of(buyerActionDetails);
+
+        // Act
+        act(new CartExtension.CartCalculateOrchestratorRequest(cart, buyerActions, optionalBuyerActionDetails));
+
+        // Assert
+        assertNoCartValidationOutputs(cart);
+        
+        assertUnexpectedCalculations(cart, new List<String>{CART_REPRICED, PROMOTIONS_RECALCULATED, INVENTORY_CHECKED, SHIPPING_RECALCULATED, TAXES_RECALCULATED, POST_SHIPPING_COMPLETED});
     }
 
     @IsTest
     public static void shouldRunShippingTaxesAndPostShippingWhenBuyerUpdatesShippingAddress() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart();
+        CartExtension.Cart cart = arrangeCart('Checkout');
 
         // Arrange BuyerActions and BuyerActionDetails as if the Buyer has updated their shipping address
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForUpdateCheckoutWithShippingAddress(cart);
@@ -214,7 +294,7 @@ global class CartCalculateSampleUnitTest {
     @IsTest
     public static void shouldRunPostShippingAndTaxesWhenBuyerSelectsDeliveryMethod() {
         // Arrange Cart
-        CartExtension.Cart cart = arrangeCart();
+        CartExtension.Cart cart = arrangeCart('Checkout');
 
         // Arrange BuyerActions and BuyerActionDetails as if the Buyer selected a delivery method
         CartExtension.BuyerActionsMock buyerActions = getBuyerActionsForUpdateCheckoutWithSelectedDeliveryMethod(cart);
