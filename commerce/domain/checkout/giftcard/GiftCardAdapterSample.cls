@@ -101,7 +101,7 @@ global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
                 applyResponse.setStatus('Fail');
                 applyResponse.setErrorMessage(errorMessage);
             }
-
         }
         return applyResponse;
-    }
+   }
+}
