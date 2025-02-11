@@ -1,13 +1,13 @@
 /**
  * @description Custom Gift card adapter. This class will have operations like applyGiftCard(), redeemGiftCard(), refundGiftCard().
  In this sample implementation of applyGiftCard, if the https service is registered , we make a call to that third party service
- with giftCardNumber and pin passed as the input in the request. The response is expected to have availableAmount (in the gift card)
+ with giftCardNumber and pin passed as the input in the request. The response is expected to have appliedAmount
  and giftCardReference. If https service is not registered then we return a hardcoded values.
  */
 
 global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
 
-    private static String httpHost = 'https://giftCardProvider.com';
+    private static String httpHost = 'https://example.com';
     private static Boolean useHTTPService = false;
 
     public virtual override CartExtension.ApplyGiftCardResponse applyGiftCard(CartExtension.ApplyGiftCardRequest applyRequest){
@@ -20,16 +20,17 @@ global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
         CartExtension.ApplyGiftCardResponse response = null;
 
         if(useHTTPService) {
-           response = applyGiftCardService(giftCardCode, pin, amount);
+           response = applyGiftCardService(giftCardCode, pin, amount, giftCardCurrency);
         } else {
-           response = applyGiftCardMockedService(giftCardCode, pin, amount);
+           response = applyGiftCardMockedService(giftCardCode, pin, amount, giftCardCurrency);
         }
 
         return response;
 
     }
 
-    private CartExtension.ApplyGiftCardResponse applyGiftCardMockedService(String giftCardCode, String giftCardPin, Double amount) {
+    private CartExtension.ApplyGiftCardResponse applyGiftCardMockedService(String giftCardCode, String giftCardPin,
+                                                Double amount, String giftCardCurrency) {
         CartExtension.ApplyGiftCardResponse applyResponse = new CartExtension.ApplyGiftCardResponse();
 
         applyResponse.setGiftCardReference('123456789');
@@ -43,7 +44,8 @@ global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
 
     }
 
-   private CartExtension.ApplyGiftCardResponse applyGiftCardService(String giftCardCode, String giftCardPin, Double amount) {
+   private CartExtension.ApplyGiftCardResponse applyGiftCardService(String giftCardCode, String giftCardPin,
+                                               Double amount, String giftCardCurrency) {
         CartExtension.ApplyGiftCardResponse applyResponse = new CartExtension.ApplyGiftCardResponse();
 
          final Integer successfulHttpRequest = 200;
