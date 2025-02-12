@@ -3,6 +3,12 @@
  In this sample implementation of applyGiftCard, if the https service is registered , we make a call to that third party service
  with giftCardNumber and pin passed as the input in the request. The response is expected to have appliedAmount
  and giftCardReference. If https service is not registered then we return a hardcoded values.
+
+ ApplyGiftCardRequest : this is the input to applyGiftCard method. request will have giftCardNumber, giftCardPin
+ and amount set
+
+ ApplyGiftCardResponse : This is the output type from applyGiftCard method. Response will have giftCardReference,
+ appliedAmount, Success or Fail status set along with errorMessage in case of Fail status.
  */
 
 global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
