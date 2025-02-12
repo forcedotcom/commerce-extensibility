@@ -36,7 +36,6 @@ global class GiftCardAdapter extends CartExtension.GiftCardAdapter{
         applyResponse.setGiftCardReference('123456789');
         applyResponse.setAppliedAmount(50);
         applyResponse.setLastFour('6789');
-        applyResponse.setCreditType('GiftCard');
         applyResponse.setStatus('Success');
 
         return applyResponse;
