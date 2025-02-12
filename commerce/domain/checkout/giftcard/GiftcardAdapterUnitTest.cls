@@ -23,6 +23,45 @@ global class GiftcardAdapterUnitTest{
     }
 
     @IsTest
+    public static void applyGiftCardWithThirdPartyServiceSuccess(){
+        CartExtension.ApplyGiftCardRequest applyRequest = new CartExtension.ApplyGiftCardRequest('111111111', '1234', 50,'USD');
+        GiftCardAdapter adapter = new GiftCardAdapter();
+
+        adapter.shouldUseHttpService(true);
+
+        // Set mock callout class
+        System.Test.setMock(HttpCalloutMock.class, new GiftCardMockHttpResponseSuccess());
+        // Act
+        Test.startTest();
+        CartExtension.ApplyGiftCardResponse applyResponse = adapter.applyGiftCard(applyRequest);
+        Test.stopTest();
+
+        System.assertEquals(applyResponse.getGiftCardReference(), '111111111');
+        System.assertEquals(applyResponse.getStatus(), 'Success');
+        System.assertEquals(applyResponse.getAppliedAmount(), 20);
+        System.assertEquals(applyResponse.getLastFour(), '1111');
+
+
+    }
+
+    @IsTest
+    public static void applyGiftCardWithThirdPartyServiceFail(){
+        CartExtension.ApplyGiftCardRequest applyRequest = new CartExtension.ApplyGiftCardRequest('111111111', '1234', 50,'USD');
+        GiftCardAdapter adapter = new GiftCardAdapter();
+
+        adapter.shouldUseHttpService(true);
+
+        // Set mock callout class
+        System.Test.setMock(HttpCalloutMock.class, new GiftCardMockHttpResponseFail());
+        // Act
+        Test.startTest();
+        CartExtension.ApplyGiftCardResponse applyResponse = adapter.applyGiftCard(applyRequest);
+        Test.stopTest();
+
+        System.assertEquals(applyResponse.getStatus(), 'Fail');
+    }
+
+    @IsTest
     public static void applyGiftCardWithDefaultImplementation(){
         CartExtension.ApplyGiftCardRequest applyRequest = new CartExtension.ApplyGiftCardRequest('987654321', '1234', 50,'USD');
         GiftCardAdapterDefault defaultAdapter = new GiftCardAdapterDefault();
