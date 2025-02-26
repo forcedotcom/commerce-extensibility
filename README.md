@@ -8,8 +8,9 @@ This repository contains a reference implementation of the Commerce Extensibilit
 	- Shipping Calculator
 	- Tax Calculator
 	- Tax Service
-- [Domain Extension for Checkout](#domain-extension-for-checkout)
-	- Checkout Create Order
+- [Domain Extensions for Checkout](#domain-extensions-for-checkout)
+	- CreateOrder Service
+	- SplitShipment Service
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
@@ -54,15 +55,23 @@ All error cases are propagated to the admin as CommerceDiagnosticEvents (see [Co
 
 All reference implementations include examples of how to propagate an error to the user.
 
-## Domain Extension for Checkout
-### Checkout Create Order
+## Domain Extensions for Checkout
 
-The sample code for [Checkout Create Order](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/CheckoutCreateOrder.html) extension point includes an Apex class (see [CreateOrderSample.cls](commerce/domain/checkout/order/createOrder/classes/CreateOrderSample.cls) that provides an example of how to work with the [OrderGraph](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/OrderGraph.html).
+### CreateOrder Service
 
-A unit test (see [CreateOrderSampleUnitTest.cls](commerce/domain/checkout/order/createOrder/classes/CreateOrderSampleUnitTest.cls))) that follows this approach for [Mocking the Base Apex Class in Tests](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/mock-the-base-apex-class.html).
+The sample code for the [CreateOrder Service](https://developer.salesforce.com/docs/commerce/salesforce-commerce/references/comm-apex-reference/CheckoutCreateOrder.html) extension point includes an Apex class (see [CreateOrderSample.cls](commerce/domain/checkout/order/createOrder/classes/CreateOrderSample.cls)) that provides an example of how to work with the [OrderGraph](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/OrderGraph.html).
+
+A unit test (see [CreateOrderSampleUnitTest.cls](commerce/domain/checkout/order/createOrder/classes/CreateOrderSampleUnitTest.cls)) that follows this approach for [Mocking the Base Apex Class in Tests](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/mock-the-base-apex-class.html).
 
 Also, there is an "integration" test (see [CreateOrderSampleIntegrationTest.cls](commerce/domain/checkout/order/createOrder/classes/CreateOrderSampleIntegrationTest.cls)) that verifies implementation of the CreateOrder extension that calls real default extension point behavior. This testing approach can be used in addition to unit test, it has wider test coverage, but it is less isolated than unit test presented in the example below.
 
+### SplitShipment Service
+
+The sample code for the [SplitShipment Service](https://developer.salesforce.com/docs/commerce/salesforce-commerce/references/comm-apex-reference/SplitShipmentService.html) extension point includes an Apex class (see [SplitShipmentSample.cls](commerce/domain/shipping/splitshipment/SplitShipmentSample.cls)) that creates cart delivery groups by conveyable and non-conveyable products. 
+
+Another example (see [SplitShipmentCallsSuper.cls](commerce/domain/shipping/splitshipment/SplitShipmentCallsSuper.cls)) calls the default implementation.
+
+Also, there is a unit test (see [SplitShipmentUnitTest.cls](commerce/domain/shipping/splitshipment/SplitShipmentUnitTest.cls)) that follows this approach for [Mocking the Base Apex Class in Tests](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/mock-the-base-apex-class.html).
 
 ## Deployment
 
