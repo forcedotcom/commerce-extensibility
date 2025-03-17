@@ -48,6 +48,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         // Clean up the CartDeliveryGroupMethods except already selected Delivery method
         for (Integer j = (cartDeliveryGroupMethods.size() - 1); j >= 0; j--) {
           CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(j);
+          // remove cart delivery group methods if selectedDeliveryMethod is null or delivery method id not matching with selectedDeliveryMethodId
           if(selectedDeliveryMethod==null || (selectedDeliveryMethod!=null && !method.getId().equals(selectedDeliveryMethod.getId()))) {
             cartDeliveryGroupMethods.remove(method);
           }
@@ -79,7 +80,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                 );
               }
           } else {
-
+        // this block is for static response for sample class
           if(selectedDeliveryMethod==null ||
           (selectedDeliveryMethod!=null &&
             !('Ground Shipping'.equals(selectedDeliveryMethod.getName()) &&
@@ -274,6 +275,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
    CartExtension.CartDeliveryGroupMethod selectedDeliveryMethod
  ) {
      for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
+       //if selected CDGM is matching with shipping option then we don't need to create shipping option and existing can be reused
         if(!isShippingOptionMatchingWithSelectedDM(shippingOption,selectedDeliveryMethod)){
             String carrier = shippingOption.serviceName;
             String classOfService = shippingOption.provider;
@@ -308,25 +310,25 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             //CartDeliveryGroupMethod previousSelectDeliveryMethod = [SELECT Name, ShippingFee, WebCartId, Carrier, ClassOfService, ExternalProvider, ProductId, ReferenceNumber, IsActive, TransitTimeMin, TransitTimeMax, TransitTimeUnit, ProcessTime, ProcessTimeUnit FROM CartDeliveryGroupMethod WHERE Id= :previousSelectDeliveryMethodId];
 
             // return if all fields of shipping option matches with selectedDM else return false
-            return (previousSelectDeliveryMethod.getName().equals(shippingOption.getName()) &&
-            previousSelectDeliveryMethod.getIsActive().equals(shippingOption.isActive()) &&
+            return (previousSelectDeliveryMethod.getName().equals(shippingOption.getName()) && // compare name
+            previousSelectDeliveryMethod.getIsActive().equals(shippingOption.isActive()) && // compare isActive flag
 
-            previousSelectDeliveryMethod.getShippingFee().equals(shippingOption.getRate()) &&
+            previousSelectDeliveryMethod.getShippingFee().equals(shippingOption.getRate()) &&  // compare shipping fee
 
-            isNullOrEquals(previousSelectDeliveryMethod.getProcessTime(), shippingOption.getProcessTime()) &&
-            isNullOrEquals(previousSelectDeliveryMethod.getProcessTimeUnit(), shippingOption.getProcessTimeUnit()) &&
+            isNullOrEquals(previousSelectDeliveryMethod.getProcessTime(), shippingOption.getProcessTime()) && // compare time
+            isNullOrEquals(previousSelectDeliveryMethod.getProcessTimeUnit(), shippingOption.getProcessTimeUnit()) && // compare time unit
 
             // ideally reference number should match but in this sample we are generating random string so won't match
             //previousSelectDeliveryMethod.getReferenceNumber().equals(shippingOption.getReferenceNumber()) &&
             previousSelectDeliveryMethod.getCarrier().equals(shippingOption.getCarrier()) &&
             previousSelectDeliveryMethod.getClassOfService().equals(shippingOption.getClassOfService()) &&
             previousSelectDeliveryMethod.getExternalProvider().equals(shippingOption.getProvider()) &&
-            previousSelectDeliveryMethod.getCarrier().equals(shippingOption.getCarrier()) &&
 
-            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeMax(), shippingOption.getTransitTimeMax()) &&
+            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeMax(), shippingOption.getTransitTimeMax()) && // compare transit time
             isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeMin(), shippingOption.getTransitTimeMin()) &&
-            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeUnit(), shippingOption.getTransitTimeUnit()));
+            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeUnit(), shippingOption.getTransitTimeUnit())); // compare transit time unit
         }
+        // we will return false so DM can be created if no previous selected DM is null
         return false;
     }
 
