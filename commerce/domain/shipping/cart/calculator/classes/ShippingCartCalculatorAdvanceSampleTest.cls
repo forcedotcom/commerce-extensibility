@@ -1,8 +1,8 @@
 /**
- * An Apex Class which tests the ShippingCartCalculatorSampleAdvance
+ * An Apex Class which tests the ShippingCartCalculatorAdvanceSample
  */
 @IsTest
-global with sharing class ShippingCartCalculatorSampleAdvanceTest {
+global with sharing class ShippingCartCalculatorAdvanceSampleTest {
 
     @IsTest
     static void testCartWithNoCartDeliveryGroup() {
@@ -15,7 +15,7 @@ global with sharing class ShippingCartCalculatorSampleAdvanceTest {
         // Act
         Test.startTest();
         CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
-        ShippingCartCalculatorSampleAdvance calculator = new ShippingCartCalculatorSampleAdvance();
+        ShippingCartCalculatorAdvanceSample calculator = new ShippingCartCalculatorAdvanceSample();
         calculator.calculate(request);
         Test.stopTest();
 
@@ -36,7 +36,7 @@ global with sharing class ShippingCartCalculatorSampleAdvanceTest {
         // Act
         Test.startTest();
         CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
-        ShippingCartCalculatorSampleAdvance calculator = new ShippingCartCalculatorSampleAdvance();
+        ShippingCartCalculatorAdvanceSample calculator = new ShippingCartCalculatorAdvanceSample();
         calculator.calculate(request);
         Test.stopTest();
 
@@ -100,7 +100,7 @@ global with sharing class ShippingCartCalculatorSampleAdvanceTest {
         // Act
         Test.startTest();
         CartExtension.CartCalculateCalculatorRequest request = new CartExtension.CartCalculateCalculatorRequest(cart, CartExtension.OptionalBuyerActionDetails.empty());
-        ShippingCartCalculatorSampleAdvance calculator = new ShippingCartCalculatorSampleAdvance();
+        ShippingCartCalculatorAdvanceSample calculator = new ShippingCartCalculatorAdvanceSample();
         //calculator.calculate(request);
 
         // Assert

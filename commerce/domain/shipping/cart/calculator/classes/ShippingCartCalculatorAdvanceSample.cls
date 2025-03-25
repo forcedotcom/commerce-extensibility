@@ -2,9 +2,13 @@
 // via the extension point for the Shipping Calculator. The Custom Apex Class must be linked to the
 // Shipping Calculator extension point and then the integration must be linked to the webstore via
 // appropriate Setup
-
+// This sample calculator provides basic functionality and additionally retains the shopper's preferred delivery method based on the conditions outlined below:
+// - On the initial checkout, the cheapest available shipping option is selected by default.
+// - If the buyer chooses a different delivery method and subsequent checkout changes trigger a shipping recalculation:
+// - The previously selected method will be retained if it remains valid.
+// - If the previously selected method is no longer valid, the cheapest available option will be selected.
 // This class must extend the CartExtension.ShippingCartCalculator class to be processed.
-public class ShippingCartCalculatorSampleAdvance extends CartExtension.ShippingCartCalculator {
+public class ShippingCartCalculatorAdvanceSample extends CartExtension.ShippingCartCalculator {
   // You MUST change this to be your service or you must launch your own Third Party Service
   // and add the host in Setup | Security | Remote site settings.
   private static String externalShippingServiceHost = 'https://example.com';
@@ -268,7 +272,7 @@ public class ShippingCartCalculatorSampleAdvance extends CartExtension.ShippingC
 
 
   private void populateCartDeliveryGroupMethodWithShippingOptions(
-   List<ShippingCartCalculatorSampleAdvance.ShippingOptionsAndRatesFromExternalService> shippingOptions,
+   List<ShippingCartCalculatorAdvanceSample.ShippingOptionsAndRatesFromExternalService> shippingOptions,
    CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethodCollection,
    String shippingProduct,
    CartExtension.CartValidationOutputList cartValidationOutputCollection,
