@@ -39,19 +39,21 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
     } else {
       CartExtension.CartItemList cartItems = cart.getCartItems();
       Integer numberOfUniqueItems = cartItems.size();
-      
+
       for (Integer i = (cartDeliveryGroups.size() - 1); i >= 0; i--) {
         CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(i);
         CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
+        CartExtension.CartDeliveryGroupMethod selectedDeliveryMethod =  cartDeliveryGroup.getSelectedCartDeliveryGroupMethod();
 
-        // Clean up the CartDeliveryGroupMethods
+        // Clean up the CartDeliveryGroupMethods except already selected Delivery method
         for (Integer j = (cartDeliveryGroupMethods.size() - 1); j >= 0; j--) {
           CartExtension.CartDeliveryGroupMethod method = cartDeliveryGroupMethods.get(j);
-          cartDeliveryGroupMethods.remove(method);
+          // remove cart delivery group methods if selectedDeliveryMethod is null or delivery method id not matching with selectedDeliveryMethodId
+          if(selectedDeliveryMethod==null || (selectedDeliveryMethod!=null && !method.getId().equals(selectedDeliveryMethod.getId()))) {
+            cartDeliveryGroupMethods.remove(method);
+          }
         }
-        // To clear selected Cart Delivery Group Method
-        cartDeliveryGroup.setSelectedCartDeliveryGroupMethod(null);
-  
+
         // Get the Shipping Product
         List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' LIMIT 1];
         if(shippingProducts.size() == 0) {
@@ -74,11 +76,23 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
                 populateCartDeliveryGroupMethodWithShippingOptions(
                   shippingOptionsAndRatesFromExternalService,
                   cartDeliveryGroupMethods,shippingProduct,
-                  cartValidationOutputList
+                  cartValidationOutputList, selectedDeliveryMethod
                 );
               }
           } else {
-            CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
+        // this block is for static response for sample class
+          if(selectedDeliveryMethod==null ||
+          (selectedDeliveryMethod!=null &&
+            !('Ground Shipping'.equals(selectedDeliveryMethod.getName()) &&
+           selectedDeliveryMethod.getShippingFee().equals(10.99) &&
+           selectedDeliveryMethod.getCarrier().equals('USPS') &&
+           selectedDeliveryMethod.getClassOfService().equals('Ground Shipping') &&
+           selectedDeliveryMethod.getTransitTimeMin().equals(1) &&
+           selectedDeliveryMethod.getTransitTimeMax().equals(3) &&
+           selectedDeliveryMethod.getTransitTimeUnit().equals(CartExtension.TimeUnitEnum.DAYS) &&
+           selectedDeliveryMethod.getProcessTime().equals(1) &&
+           selectedDeliveryMethod.getProcessTimeUnit().equals(CartExtension.TimeUnitEnum.WEEKS)))) {
+           CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod01 = new CartExtension.CartDeliveryGroupMethod('Ground Shipping', 10.99, shippingProduct);
             cartDeliveryGroupMethod01.setCarrier('USPS');
             cartDeliveryGroupMethod01.setClassOfService('Ground Shipping');
             cartDeliveryGroupMethod01.setTransitTimeMin(1);
@@ -86,6 +100,20 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             cartDeliveryGroupMethod01.setTransitTimeUnit(CartExtension.TimeUnitEnum.DAYS);
             cartDeliveryGroupMethod01.setProcessTime(1);
             cartDeliveryGroupMethod01.setProcessTimeUnit(CartExtension.TimeUnitEnum.WEEKS);
+            cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
+            }
+
+            if(selectedDeliveryMethod==null ||
+                         (selectedDeliveryMethod!=null &&
+            !('Next Day Air'.equals(selectedDeliveryMethod.getName()) &&
+                       selectedDeliveryMethod.getShippingFee().equals(15.99) &&
+                       selectedDeliveryMethod.getCarrier().equals('UPS') &&
+                       selectedDeliveryMethod.getClassOfService().equals('Next Day Air') &&
+                       selectedDeliveryMethod.getTransitTimeMin().equals(1) &&
+                       selectedDeliveryMethod.getTransitTimeMax().equals(4) &&
+                       selectedDeliveryMethod.getTransitTimeUnit().equals(CartExtension.TimeUnitEnum.DAYS) &&
+                       selectedDeliveryMethod.getProcessTime().equals(1) &&
+                       selectedDeliveryMethod.getProcessTimeUnit().equals(CartExtension.TimeUnitEnum.DAYS)))) {
             CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod02 = new CartExtension.CartDeliveryGroupMethod('Next Day Air', 15.99, shippingProduct);
             cartDeliveryGroupMethod02.setCarrier('UPS');
             cartDeliveryGroupMethod02.setClassOfService('Next Day Air');
@@ -94,8 +122,8 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
             cartDeliveryGroupMethod02.setTransitTimeUnit(CartExtension.TimeUnitEnum.DAYS);
             cartDeliveryGroupMethod02.setProcessTime(1);
             cartDeliveryGroupMethod02.setProcessTimeUnit(CartExtension.TimeUnitEnum.DAYS);
-            cartDeliveryGroupMethods.add(cartDeliveryGroupMethod01);
             cartDeliveryGroupMethods.add(cartDeliveryGroupMethod02);
+            }
           }
         }
       }
@@ -243,29 +271,71 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
    List<ShippingCartCalculatorSample.ShippingOptionsAndRatesFromExternalService> shippingOptions,
    CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethodCollection,
    String shippingProduct,
-   CartExtension.CartValidationOutputList cartValidationOutputCollection
+   CartExtension.CartValidationOutputList cartValidationOutputCollection,
+   CartExtension.CartDeliveryGroupMethod selectedDeliveryMethod
  ) {
      for (ShippingOptionsAndRatesFromExternalService shippingOption : shippingOptions) {
-         String carrier = shippingOption.serviceName;
-         String classOfService = shippingOption.provider;
-           // Create a CartDeliveryGroupMethod for every shipping option returned from the external
-           // service
-           CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(
-             shippingOption.getName(),
-             shippingOption.getRate(),
-             shippingProduct
-           );
-           cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
-           cartDeliveryGroupMethod.setCarrier(shippingOption.getCarrier());
-           cartDeliveryGroupMethod.setClassOfService(shippingOption.getClassOfService());
-           cartDeliveryGroupMethod.setIsActive(shippingOption.isActive());
-           cartDeliveryGroupMethod.setReferenceNumber(shippingOption.getReferenceNumber());
-           cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
-           cartDeliveryGroupMethod.setTransitTimeMin(shippingOption.getTransitTimeMin());
-           cartDeliveryGroupMethod.setTransitTimeMax(shippingOption.getTransitTimeMax());
-           cartDeliveryGroupMethod.setTransitTimeUnit(shippingOption.getTransitTimeUnit());
-           cartDeliveryGroupMethod.setProcessTime(shippingOption.getProcessTime());
-           cartDeliveryGroupMethod.setProcessTimeUnit(shippingOption.getProcessTimeUnit());
+       //if selected CDGM is matching with shipping option then we don't need to create shipping option and existing can be reused
+        if(!isShippingOptionMatchingWithSelectedDM(shippingOption,selectedDeliveryMethod)){
+            String carrier = shippingOption.serviceName;
+            String classOfService = shippingOption.provider;
+            // Create a CartDeliveryGroupMethod for every shipping option returned from the external
+            // service
+            CartExtension.CartDeliveryGroupMethod cartDeliveryGroupMethod = new CartExtension.CartDeliveryGroupMethod(
+                shippingOption.getName(),
+                shippingOption.getRate(),
+                shippingProduct
+            );
+            cartDeliveryGroupMethod.setExternalProvider(shippingOption.getProvider());
+            cartDeliveryGroupMethod.setCarrier(shippingOption.getCarrier());
+            cartDeliveryGroupMethod.setClassOfService(shippingOption.getClassOfService());
+            cartDeliveryGroupMethod.setIsActive(shippingOption.isActive());
+            cartDeliveryGroupMethod.setReferenceNumber(shippingOption.getReferenceNumber());
+            cartDeliveryGroupMethodCollection.add(cartDeliveryGroupMethod);
+            cartDeliveryGroupMethod.setTransitTimeMin(shippingOption.getTransitTimeMin());
+            cartDeliveryGroupMethod.setTransitTimeMax(shippingOption.getTransitTimeMax());
+            cartDeliveryGroupMethod.setTransitTimeUnit(shippingOption.getTransitTimeUnit());
+            cartDeliveryGroupMethod.setProcessTime(shippingOption.getProcessTime());
+            cartDeliveryGroupMethod.setProcessTimeUnit(shippingOption.getProcessTimeUnit());
+           }
        }
+    }
+
+    /**
+         This method compares previous Selected Delivery method with current shipping options and if both matches returns ture
+     */
+    private boolean isShippingOptionMatchingWithSelectedDM(ShippingOptionsAndRatesFromExternalService shippingOption, CartExtension.CartDeliveryGroupMethod previousSelectDeliveryMethod) {
+        if(previousSelectDeliveryMethod != null) {
+            // get delivery group method for seletctedDMId
+            //CartDeliveryGroupMethod previousSelectDeliveryMethod = [SELECT Name, ShippingFee, WebCartId, Carrier, ClassOfService, ExternalProvider, ProductId, ReferenceNumber, IsActive, TransitTimeMin, TransitTimeMax, TransitTimeUnit, ProcessTime, ProcessTimeUnit FROM CartDeliveryGroupMethod WHERE Id= :previousSelectDeliveryMethodId];
+
+            // return if all fields of shipping option matches with selectedDM else return false
+            return (previousSelectDeliveryMethod.getName().equals(shippingOption.getName()) && // compare name
+            previousSelectDeliveryMethod.getIsActive().equals(shippingOption.isActive()) && // compare isActive flag
+
+            previousSelectDeliveryMethod.getShippingFee().equals(shippingOption.getRate()) &&  // compare shipping fee
+
+            isNullOrEquals(previousSelectDeliveryMethod.getProcessTime(), shippingOption.getProcessTime()) && // compare time
+            isNullOrEquals(previousSelectDeliveryMethod.getProcessTimeUnit(), shippingOption.getProcessTimeUnit()) && // compare time unit
+
+            // ideally reference number should match but in this sample we are generating random string so won't match
+            //previousSelectDeliveryMethod.getReferenceNumber().equals(shippingOption.getReferenceNumber()) &&
+            previousSelectDeliveryMethod.getCarrier().equals(shippingOption.getCarrier()) &&
+            previousSelectDeliveryMethod.getClassOfService().equals(shippingOption.getClassOfService()) &&
+            previousSelectDeliveryMethod.getExternalProvider().equals(shippingOption.getProvider()) &&
+
+            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeMax(), shippingOption.getTransitTimeMax()) && // compare transit time
+            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeMin(), shippingOption.getTransitTimeMin()) &&
+            isNullOrEquals(previousSelectDeliveryMethod.getTransitTimeUnit(), shippingOption.getTransitTimeUnit())); // compare transit time unit
+        }
+        // we will return false so DM can be created if no previous selected DM is null
+        return false;
+    }
+
+    /**
+        This method compares two objects, if both are null or equals returns true
+    */
+    private boolean isNullOrEquals(Object o1, Object o2) {
+        return (o1 == null && o2 == null) || (o1 != null && o1.equals(o2));
     }
 }
