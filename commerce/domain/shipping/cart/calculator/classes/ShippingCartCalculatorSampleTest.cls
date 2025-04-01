@@ -76,7 +76,7 @@ global with sharing class ShippingCartCalculatorSampleTest {
 
             // Check to see if a Product2 with name 'Shipping Charge' already exists.
             // If it doesn't exist, create one.
-            String shippingChargeProduct2Name = 'Shipping Charge';
+            String shippingChargeProduct2Name = 'Shipping Charge Product';
             List<Product2> shippingChargeProducts = [SELECT Id FROM Product2 WHERE Name = :shippingChargeProduct2Name];
             if (shippingChargeProducts.isEmpty()) {
                 Product2 shippingChargeProduct = new Product2(

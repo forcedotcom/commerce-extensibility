@@ -59,7 +59,8 @@ public class ShippingCartCalculatorAdvanceSample extends CartExtension.ShippingC
         }
 
         // Get the Shipping Product
-        List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' LIMIT 1];
+        String shippingChargeProduct2Name = 'Shipping Charge Product';
+        List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' and Name = :shippingChargeProduct2Name LIMIT 1];
         if(shippingProducts.size() == 0) {
           CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
                   CartExtension.CartValidationOutputLevelEnum.ERROR );
