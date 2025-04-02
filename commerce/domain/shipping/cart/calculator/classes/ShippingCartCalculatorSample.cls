@@ -39,7 +39,7 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
     } else {
       CartExtension.CartItemList cartItems = cart.getCartItems();
       Integer numberOfUniqueItems = cartItems.size();
-      
+
       for (Integer i = (cartDeliveryGroups.size() - 1); i >= 0; i--) {
         CartExtension.CartDeliveryGroup cartDeliveryGroup = cartDeliveryGroups.get(i);
         CartExtension.CartDeliveryGroupMethodList cartDeliveryGroupMethods = cartDeliveryGroup.getCartDeliveryGroupMethods();
@@ -51,9 +51,10 @@ public class ShippingCartCalculatorSample extends CartExtension.ShippingCartCalc
         }
         // To clear selected Cart Delivery Group Method
         cartDeliveryGroup.setSelectedCartDeliveryGroupMethod(null);
-  
+
         // Get the Shipping Product
-        List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' LIMIT 1];
+        String shippingChargeProduct2Name = 'Shipping Charge Product';
+        List<Product2> shippingProducts = [SELECT Id FROM Product2 WHERE ProductClass != 'VariationParent' and Name = :shippingChargeProduct2Name LIMIT 1];
         if(shippingProducts.size() == 0) {
           CartExtension.CartValidationOutput cvo = new CartExtension.CartValidationOutput(CartExtension.CartValidationOutputTypeEnum.SHIPPING,
                   CartExtension.CartValidationOutputLevelEnum.ERROR );
