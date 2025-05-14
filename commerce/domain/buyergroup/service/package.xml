@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>BuyerGroupEvaluationServiceSample</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>BuyerGroup</members>
+        <name>PlatformCachePartition</name>
+    </types>
+    <types>
+        <members>Active_PostalCode__c</members>
+        <members>PostalCode__c</members>
+        <members>Postal_Code_Buyer_Group__c</members>
+        <name>CustomObject</name>
+    </types>
+    <version>64.0</version>
+</Package>

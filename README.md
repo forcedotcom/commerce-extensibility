@@ -11,6 +11,8 @@ This repository contains a reference implementation of the Commerce Extensibilit
 - [Domain Extensions for Checkout](#domain-extensions-for-checkout)
 	- CreateOrder Service
 	- SplitShipment Service
+- [Domain Extensions for Buyer Group](#domain-extensions-for-buyer-group)
+	- Buyer Group Extensibility Service
 
 Each set of sample code includes: an Apex class, a test class, and any necessary resource files.
 
@@ -72,6 +74,15 @@ The sample code for the [SplitShipment Service](https://developer.salesforce.com
 Another example (see [SplitShipmentCallsSuper.cls](commerce/domain/shipping/splitshipment/SplitShipmentCallsSuper.cls)) calls the default implementation.
 
 Also, there is a unit test (see [SplitShipmentUnitTest.cls](commerce/domain/shipping/splitshipment/SplitShipmentUnitTest.cls)) that follows this approach for [Mocking the Base Apex Class in Tests](https://developer.salesforce.com/docs/commerce/salesforce-commerce/guide/mock-the-base-apex-class.html).
+
+## Domain Extensions for Buyer Group
+
+### Buyer Group Extensibility Service
+
+The sample code for Buyer Group Extensibility Service includes the following :
+- An Apex class (in `BuyerGroupEvaluationServiceSample.apxc`) that uses active postal codes to retrieve buyer groups for logged in and guest users.
+- An Org Platform Cache (in `BuyerGroup.cachePartition`) to support low latency in buyer group retrieval.
+- Supported Custom objects for storing and associating buyer groups to users via postal codes.(in `PostalCode__c`, `Active_PostalCode__c` and `Postal_Code_Buyer_Group__c`)
 
 ## Deployment
 
