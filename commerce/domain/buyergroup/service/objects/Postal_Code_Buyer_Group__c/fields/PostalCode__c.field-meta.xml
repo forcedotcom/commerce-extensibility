@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PostalCode__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <label>Postal Code</label>
+    <referenceTo>PostalCode__c</referenceTo>
+    <relationshipLabel>Postal Code Buyer Groups</relationshipLabel>
+    <relationshipName>Postal_Code_Buyer_Groups</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
