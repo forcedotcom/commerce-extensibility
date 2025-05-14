@@ -16,17 +16,6 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
         try {
             CartExtension.Cart cart = request.getCart();
 
-            // Clean up CVO based on tax. When new tax calculator request comes, we need to clean up
-            // previous CVOs as they have been previously handled by the Cart Calculate API.
-            CartExtension.CartValidationOutputList cartValidationOutputCollection = cart.getCartValidationOutputs();
-            Iterator<CartExtension.CartValidationOutput> cartValidationOutputCollectionIterator = cartValidationOutputCollection.iterator();
-            while (cartValidationOutputCollectionIterator.hasNext()) {
-                CartExtension.CartValidationOutput cvo = cartValidationOutputCollectionIterator.next();
-                if (cvo.getType() == CartExtension.CartValidationOutputTypeEnum.TAXES) {
-                    cartValidationOutputCollection.remove(cvo);
-                }
-            }
-
             CartExtension.CartDeliveryGroupList cartDeliveryGroups = cart.getCartDeliveryGroups();
             
             Integer cartItemIdSeq = 0;
@@ -102,7 +91,7 @@ public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
             String cartItemId = (cartItem.getId()==null) ? cartItemIdOrDeliveryGroupId : cartItem.getId();
 
             Double amount = cartItem.getTotalPriceAfterAllAdjustments()==null ? cartItem.getTotalListPrice() : cartItem.getTotalPriceAfterAllAdjustments();
-            Double quantity = cartItem.getQuantity()==null ? 0.00 : cartItem.getQuantity();
+            Double quantity = cartItem.getQuantity();
 
             Double netUnitPrice = 0.00;
             Double grossUnitPrice = 0.00;
