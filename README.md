@@ -38,7 +38,7 @@ The sample code for Shipping Calculator includes an Apex class (in `ShippingCalc
 
 ### Tax Calculator
 
-The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSample.apxc`) that calls an external service to retrieve tax information and then save those taxes in `CartTaxes` in `CartItems` and `CartItemAdjustments`.
+The sample code for Tax Calculator includes an Apex class (in `TaxCalculatorSample.apxc`) that calls an external service to retrieve tax information and then save those taxes in `CartTaxes` in `CartItems`.
 
 ### Tax Service
 
