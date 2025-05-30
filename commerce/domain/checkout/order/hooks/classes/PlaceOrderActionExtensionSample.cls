@@ -1,8 +1,8 @@
 /**
-* @description This is a sample implementation of Create Order Action extension for the prepare and submit actions.
+* @description This is a sample implementation of Place Order Action extension for the prepare and submit actions.
 *   
 */
-public with sharing class CreateOrderActionExtensionSample extends ConnectApi.BaseEndpointExtension {
+public with sharing class PlaceOrderActionExtensionSample extends ConnectApi.BaseEndpointExtension {
 
     public override ConnectApi.EndpointExtensionRequest beforePost(ConnectApi.EndpointExtensionRequest request) {
         
