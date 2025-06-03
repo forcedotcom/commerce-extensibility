@@ -1,39 +1,25 @@
 /**
-* @description This is a sample test class for Place Order Action extension for the prepare and submit actions.
-*   
+* @description Test class for PlaceOrderActionExtensionSample.
 */
-
 @isTest
 private class PlaceOrderActionExtensionSampleTest {
-     
-    //Test the typical workflow: beforePost followed by afterPost
     @isTest
     static void testWorkflow() {
-        // Given
         PlaceOrderActionExtensionSample extension = new PlaceOrderActionExtensionSample();
-        
-        Test.startTest();
-        
-        // When - Simulate typical workflow
+
+        // Pass null to beforePost (since ConnectApi.EndpointExtensionRequest cannot be instantiated in Apex)
         ConnectApi.EndpointExtensionRequest processedRequest = extension.beforePost(null);
+
+        // Pass null to afterPost (since ConnectApi.EndpointExtensionResponse cannot be instantiated in Apex)
         ConnectApi.EndpointExtensionResponse processedResponse = extension.afterPost(null, processedRequest);
-        
-        Test.stopTest();
-        
-        // Then - Verify both methods complete successfully and return expected values
-        System.assertEquals(null, processedRequest, 'beforePost should return the input request');
-        System.assertEquals(null, processedResponse, 'afterPost should return the input response');
+
+        System.assertEquals(null, processedRequest, 'beforePost should return null when input is null');
+        System.assertEquals(null, processedResponse, 'afterPost should return null when input is null');
     }
-    
-    
-    
-    // Test that the extension class can be instantiated without errors
+
     @isTest
     static void testExtensionInstantiation() {
-        // When
         PlaceOrderActionExtensionSample extension = new PlaceOrderActionExtensionSample();
-        
-        // Then
         System.assert(extension != null, 'Extension should be successfully instantiated');
     }
 }
