@@ -8,7 +8,7 @@
  * @description A Sample unit test for CartCalculateSample.
  */
 @IsTest
-global class CartCalculateSampleUnitTest {
+global inherited sharing class CartCalculateSampleUnitTest {
 
     private static final String CART_REPRICED = 'CartRepriced';
     private static final String PROMOTIONS_RECALCULATED = 'PromotionsRecalculated';

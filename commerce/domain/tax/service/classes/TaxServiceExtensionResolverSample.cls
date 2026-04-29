@@ -16,7 +16,7 @@
 
 // This must implement the commercestoretax.TaxService class in order to be processed by the tax service flow.
 // and it must implement the CommerceExtension.ResolutionStrategy in order to work as a extension resolver and get the different locales and resolutions.
-public class TaxServiceExtensionResolverSample extends commercestoretax.TaxService implements CommerceExtension.ResolutionStrategy {
+public with sharing class TaxServiceExtensionResolverSample extends commercestoretax.TaxService implements CommerceExtension.ResolutionStrategy {
     public CommerceExtension.Resolution resolve() {
         // The Sample Extension Provider registered with developer name as 'tax_extension_provider_for_us' will be selected for execution for en_US locale
         if(CommerceExtension.ExtensionInfo.getLocaleString() == 'en_US') {

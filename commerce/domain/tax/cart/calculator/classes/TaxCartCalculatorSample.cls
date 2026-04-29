@@ -9,7 +9,7 @@
 // if overriden.
 //
 // Disclaimer: the code listed here is a sample that hasn't been tested for production use. Always test your code before releasing to production.
-public class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
+public with sharing class TaxCartCalculatorSample extends CartExtension.TaxCartCalculator {
 
     // Disclaimer: the code listed here is a sample that hasn't been tested for production use. Always test your code before releasing to production.
     public virtual override void calculate(CartExtension.CartCalculateCalculatorRequest request) {
