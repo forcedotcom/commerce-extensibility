@@ -2,7 +2,7 @@
  * @description A Sample unit test for ShippingAndTaxesForCartOrchestrator.
  */
 @IsTest
-global class ShippingAndTaxesForCartOrchestratorTest {
+global inherited sharing class ShippingAndTaxesForCartOrchestratorTest {
 
     private static final String CART_REPRICED = 'CartRepriced';
     private static final String PROMOTIONS_RECALCULATED = 'PromotionsRecalculated';

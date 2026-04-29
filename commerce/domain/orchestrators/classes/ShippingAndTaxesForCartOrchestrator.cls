@@ -8,7 +8,7 @@
 * Calculates shipping, post shipping and taxes for update shipping address operation.
 * Calculates taxes for select delivery method operation.
 */
-global class ShippingAndTaxesForCartOrchestrator extends CartExtension.CartCalculate {
+global with sharing class ShippingAndTaxesForCartOrchestrator extends CartExtension.CartCalculate {
 
     /**
      * @description All classes extending CartExtension.CartCalculate must have a default constructor defined

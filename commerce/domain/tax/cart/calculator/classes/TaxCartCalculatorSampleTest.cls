@@ -2,7 +2,7 @@
  * @description A Sample unit test for TaxCartCalculatorSample.
  */
 @IsTest
-public class TaxCartCalculatorSampleTest {
+public inherited sharing class TaxCartCalculatorSampleTest {
 
     private static final String CART_NAME = 'My Cart';
     private static final String ACCOUNT_NAME = 'My Account';

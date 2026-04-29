@@ -7,7 +7,7 @@
 // For more information related to that, please see the corresponding documentation.
 
 // Disclaimer: the code listed here is a sample that hasn't been tested for production use. Always test your code before releasing to production.
-public class TaxServiceExtensionSample extends commercestoretax.TaxService {
+public with sharing class TaxServiceExtensionSample extends commercestoretax.TaxService {
     
     Map<String, Double> taxCodeToRate = new Map<String, Double>{'Beverages' => 0.25, 'Shipping' => 0.1};
 
