@@ -12,7 +12,7 @@
 // Your custom apex extension providers and the resolver must be registered with the tax extension point and then the resolver must be registered and mapped to the web store via appropriate setup.
 // You can have as many Extension Providers registered as per your use case and select them in your resolver for different locales.
 // Please follow the corresponding salesforce documentation on how to use locales.
-// For more information related to that, please see the corresponding documentation.
+// For more information  related to that, please see the corresponding documentation.
 
 // This must implement the commercestoretax.TaxService class in order to be processed by the tax service flow.
 // and it must implement the CommerceExtension.ResolutionStrategy in order to work as a extension resolver and get the different locales and resolutions.
