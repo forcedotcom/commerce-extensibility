@@ -156,6 +156,122 @@ public class PricingServiceSample extends commercestorepricing.PricingService {
     return txnResponse;
   }
 
+  // Override resolveContracts to tell Commerce which contract price applies to each cart line.
+  // The framework calls this once per pricing request with the buyer's account and the lines
+  // being priced; you return, per line, the ContractItemPrice that should be used. Downstream
+  // pricing then reads the negotiated price from the contract records you selected here.
+  //
+  // This sample resolves contract prices directly from Salesforce ContractItemPrice records, but
+  // you can adapt it to call an external contract system instead. The key rules it demonstrates:
+  //   - Effective-dated: only contract prices active on the request's effective date are eligible.
+  //   - Currency-aware: only prices in the request's currency are considered.
+  //   - Overlap handling: when a product has more than one eligible contract price, the row with
+  //     the latest StartDate wins, and CreatedDate breaks same-day ties.
+  //
+  // NOTE: resolveContracts and the default-resolution controls are available on API v264+.
+  public override commercestorepricing.ContractResolutionResponse resolveContracts(
+    commercestorepricing.ContractResolutionRequest request
+  ) {
+    commercestorepricing.ContractResolutionResponse response = request.newResponse();
+
+    // Controls what happens to lines this method does NOT resolve. With default resolution
+    // enabled, any unresolved line falls back to standard Salesforce pricing (e.g. list price).
+    // Call response.disableDefaultResolution() instead if this extension should be the sole
+    // authority and unresolved lines must not be priced by the platform.
+    response.enableDefaultResolution();
+
+    try {
+      // Request context: the buyer account, the currency to price in, and the point in time the
+      // contract must be active for. Fall back to "now" when the caller did not specify a date.
+      String accountId       = request.getAccountId();
+      String currencyIsoCode = request.getCurrencyIsoCode();
+      Datetime effectiveDate = (request.getEffectiveDate() == null)
+        ? System.now()
+        : request.getEffectiveDate();
+
+      // Each request item represents one cart line to resolve a contract for.
+      List<commercestorepricing.ContractPricingRequestItem> items = request.getRequestItems();
+      if (items == null || items.isEmpty() || String.isBlank(accountId)) {
+        // Nothing to resolve (or no account) - return early and let default resolution handle it.
+        return response;
+      }
+
+      // Gather the product Ids up front so we can resolve the whole request in a single SOQL query
+      // rather than querying per line. This keeps the extension within Apex governor limits even
+      // for large carts (bulkification).
+      Set<String> productIds = new Set<String>();
+      for (commercestorepricing.ContractPricingRequestItem item : items) {
+        if (String.isNotBlank(item.getProductId())) {
+          productIds.add(item.getProductId());
+        }
+      }
+      if (productIds.isEmpty()) {
+        return response;
+      }
+
+      // Query every eligible contract price for these products in one shot, then pick a winner per
+      // product below. Notes on the query:
+      //   - Contract.AccountId = :accountId  -> only this buyer's contracts.
+      //   - StartDate/EndDate bounds          -> only contracts active on the effective date
+      //                                          (a null EndDate means open-ended / no expiry).
+      //   - CurrencyIsoCode = :currencyIsoCode-> only prices in the requested currency.
+      //   - WITH SYSTEM_MODE                  -> contract pricing lives in system-owned data the
+      //                                          storefront buyer typically cannot read directly,
+      //                                          so we query in system mode. Remove this if you
+      //                                          intend the query to respect the running user's
+      //                                          permissions.
+      //   - ORDER BY ItemId, StartDate DESC, CreatedDate DESC -> groups rows by product and puts
+      //                                          the winning row (latest start, newest tie-break)
+      //                                          first within each product group.
+      // Key by Id (not String): the Apex Id type normalizes 15- and 18-char ids on both put
+      // and get, so a 15-char productId from one storefront surface (e.g. cart) still matches
+      // the 18-char ItemId that SOQL always returns. A String-keyed map compares exact
+      // characters and can miss, resolving PDP and cart differently for the same product.
+      Map<Id, ContractItemPrice> contractsByProduct = new Map<Id, ContractItemPrice>();
+      for (ContractItemPrice cip : [
+          SELECT Id, ContractId, ItemId, ProductSellingModelId, Price, StartDate
+          FROM ContractItemPrice
+          WHERE Contract.AccountId = :accountId
+            AND ItemId IN :productIds
+            AND StartDate <= :effectiveDate
+            AND (EndDate = null OR EndDate >= :effectiveDate)
+            AND CurrencyIsoCode = :currencyIsoCode
+          WITH SYSTEM_MODE
+          ORDER BY ItemId, StartDate DESC, CreatedDate DESC
+      ]) {
+        // Because of the ORDER BY, the first row seen for each product is the winner; keep it and
+        // ignore any later (older) rows for the same product.
+        if (!contractsByProduct.containsKey(cip.ItemId)) {
+          contractsByProduct.put(cip.ItemId, cip);
+        }
+      }
+
+      // Report the resolved contract for each line back to the framework. putContractForLine tells
+      // Commerce which ContractId + ContractItemPrice to apply for this product / selling model.
+      // Lines with no matching contract are simply left unresolved and handled per the default
+      // resolution setting chosen above.
+      for (commercestorepricing.ContractPricingRequestItem item : items) {
+        ContractItemPrice cip = contractsByProduct.get(item.getProductId());
+        if (cip != null) {
+          response.putContractForLine(
+            item.getProductId(),
+            item.getPsmId(),
+            cip.ContractId,
+            cip.Id
+          );
+        }
+      }
+
+    } catch (Exception e) {
+      // Fail safe: swallow and log so a runtime error here does not break the whole pricing
+      // request. Unresolved lines then follow the default resolution behavior. Replace this with
+      // your own logging/alerting as appropriate.
+      System.debug('resolveContracts failed, message: ' + e.getMessage() + ', stacktrace: ' + e.getStackTraceString());
+    }
+
+    return response;
+  }
+
   private Map<String, PriceDataFromExternalService> getPriceFromStaticResponse(Set<String> productIds) {
         String responseJson = '{';
         for(String productID : productIds) {
